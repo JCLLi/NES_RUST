@@ -10,3 +10,11 @@ publish = false
 tudelft-nes-ppu = "1.0.3"
 tudelft-nes-test = "0.1.1"
 
+[profile.dev]
+opt-level=1
+debug = true
+
+[profile.release]
+opt-level=3
+lto = true
+debug = true
