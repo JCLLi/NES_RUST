@@ -1,6 +1,6 @@
-use std::error::Error;
 use log::LevelFilter;
-use tudelft_nes_ppu::{Cpu, Mirroring, Ppu, run_cpu};
+use std::error::Error;
+use tudelft_nes_ppu::{run_cpu, Cpu, Mirroring, Ppu};
 use tudelft_nes_test::TestableCpu;
 
 pub struct MyCpu {}
@@ -48,21 +48,18 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
-    use log::LevelFilter;
-    use tudelft_nes_test::{run_all_tests, TestSelector};
     use crate::MyCpu;
+    use log::LevelFilter;
+    use tudelft_nes_test::{run_tests, TestSelector};
 
     /// This test fails in the template, since you didn't implement the cpu yet.
     #[test]
     fn test_all() {
         env_logger::builder().filter_level(LevelFilter::Info).init();
 
-        if let Err(e) = tudelft_nes_test::run_tests::<ReferenceCpu>(TestSelector::DEFAULT) {
+        if let Err(e) = run_tests::<MyCpu>(TestSelector::DEFAULT) {
             log::error!("TEST FAILED: {e}");
             assert!(false);
         }
     }
 }
-
-
