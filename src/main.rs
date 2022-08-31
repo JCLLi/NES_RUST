@@ -1,4 +1,5 @@
 use std::error::Error;
+use log::LevelFilter;
 use tudelft_nes_ppu::{Cpu, Mirroring, Ppu, run_cpu};
 use tudelft_nes_test::TestableCpu;
 
@@ -37,22 +38,30 @@ impl TestableCpu for MyCpu {
 }
 
 fn main() {
+    env_logger::builder().filter_level(LevelFilter::Info).init();
+
     let cpu = MyCpu {};
 
+    log::info!("running cpu");
     run_cpu(cpu, Mirroring::Horizontal);
 }
 
 #[cfg(test)]
 mod tests {
     use std::error::Error;
-    use tudelft_nes_test::run_all_tests;
+    use log::LevelFilter;
+    use tudelft_nes_test::{run_all_tests, TestSelector};
     use crate::MyCpu;
 
     /// This test fails in the template, since you didn't implement the cpu yet.
     #[test]
-    fn test_all() -> Result<(), Box<dyn Error>> {
-        run_all_tests::<MyCpu>()?;
-        Ok(())
+    fn test_all() {
+        env_logger::builder().filter_level(LevelFilter::Info).init();
+
+        if let Err(e) = tudelft_nes_test::run_tests::<ReferenceCpu>(TestSelector::DEFAULT) {
+            log::error!("TEST FAILED: {e}");
+            assert!(false);
+        }
     }
 }
 
