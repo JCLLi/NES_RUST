@@ -1,3 +1,5 @@
+mod mapper;
+
 use log::LevelFilter;
 use std::error::Error;
 use tudelft_nes_ppu::{run_cpu, Cpu, Mirroring, Ppu};
