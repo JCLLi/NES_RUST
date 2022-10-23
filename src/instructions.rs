@@ -609,13 +609,14 @@ impl Instruction {
             _ => panic!("Invalid Opcode: {:08x}", opcode),
         }
     }
-    pub fn do_instruction(mycpu: &mut MyCpu, ppu: &mut Ppu) {
+    pub fn do_instruction(mycpu: &mut MyCpu, ppu: Option<&mut Ppu>) {
         let opcode: u8 = mycpu.cpu.mem[mycpu.cpu.pc as usize];
         let instr = Instruction::get_instruction(opcode);
         mycpu.cycle = instr.cycle;
         println!("Opcode: {:#0x}", opcode); // TODO remove this (or replace with debug)
         match instr.instruction_name {
             InstructionName::BRK => {
+                // NOTE some assembles make this instruction 2 bytes, this implementation is only 1
                 let p = mycpu.cpu.carry as u8 |
                     (mycpu.cpu.zero as u8) << 1 |
                     (mycpu.cpu.irq_dis as u8) << 2 |
@@ -627,11 +628,12 @@ impl Instruction {
                 mycpu.cpu.stack_push((mycpu.cpu.pc & 0xff) as u8);
                 mycpu.cpu.stack_push(((mycpu.cpu.pc >> 8) & 0xff) as u8);
                 mycpu.cpu.stack_push(p);
-                mycpu.cpu.pc = 0xFFFE - 1;
+                mycpu.cpu.pc = get_irq_addr(mycpu) - 1; // NOTE pc incremented after each instruction
+                mycpu.cpu.b = true; // NOTE this has to happen after pushing status register
             }
             InstructionName::LDX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.x = mycpu.data_read(Some(ppu), addr);
+                mycpu.cpu.x = mycpu.data_read(ppu, addr);
                 // ps
                 if mycpu.cpu.x == 0 {
                     mycpu.cpu.zero = true;
@@ -642,7 +644,7 @@ impl Instruction {
             }
             InstructionName::LDY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.y = mycpu.data_read(Some(ppu), addr);
+                mycpu.cpu.y = mycpu.data_read(ppu, addr);
                 // ps
                 if mycpu.cpu.y == 0 {
                     mycpu.cpu.zero = true;
@@ -664,14 +666,15 @@ impl Instruction {
             }
             InstructionName::STX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.data_write(Some(ppu), addr, mycpu.cpu.x);
+                mycpu.data_write(ppu, addr, mycpu.cpu.x);
             }
             InstructionName::STY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.data_write(Some(ppu), addr, mycpu.cpu.y);
+                mycpu.data_write(ppu, addr, mycpu.cpu.y);
             }
             InstructionName::INX => {
                 if mycpu.cpu.x == 0xff {
+                    // Handle overflow
                     mycpu.cpu.zero = true;
                     mycpu.cpu.x = 0;
                 } else {
@@ -683,6 +686,7 @@ impl Instruction {
             }
             InstructionName::INY => {
                 if mycpu.cpu.y == 0xff {
+                    // Handle overflow
                     mycpu.cpu.zero = true;
                     mycpu.cpu.y = 0;
                 } else {
@@ -695,14 +699,15 @@ impl Instruction {
             InstructionName::JMP => {
                 // pc
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.pc = memory_jump(mycpu, addr) - 1;
+                mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
             }
             _ => panic!("Instruction not available"),
         }
+        mycpu.cpu.pc += 1; // Next instruction
     }
 }
 
-pub fn memory_jump(mycpu: &mut MyCpu, addr: u16) -> u16 {
+pub fn get_jump_addr(mycpu: &mut MyCpu, addr: u16) -> u16 {
     if addr >= 0x8000 {
         get_mapped_address(
             mycpu.cartridge.mapper_number,
@@ -712,6 +717,10 @@ pub fn memory_jump(mycpu: &mut MyCpu, addr: u16) -> u16 {
     } else {
         addr
     }
+}
+
+pub fn get_irq_addr(mycpu: &mut MyCpu) -> u16 {
+    ((mycpu.data_read(None, 0xffff) as u16) << 8) | mycpu.data_read(None, 0xfffe) as u16
 }
 
 pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 {
@@ -773,228 +782,5 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
             ret_addr & 0xFF
         }
         _ => panic!("Addressing mode not implemented yet"),
-    }
-}
-
-#[cfg(test)]
-mod instruction_tests {
-    use crate::instructions::Instruction;
-    use crate::MyCpu;
-    use tudelft_nes_ppu::{Mirroring, Ppu};
-
-    #[test]
-    fn test_inx() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.x = 6;
-        test_cpu.cpu.mem[0x8000] = 0xe8; // INX Implied
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.x, 7);
-
-        test_cpu.cpu.x = 0xff;
-        test_cpu.cpu.mem[0x8000] = 0xe8; // INX Implied
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert!(test_cpu.cpu.zero);
-
-        test_cpu.cpu.x = 0b0111_1111;
-        test_cpu.cpu.mem[0x8000] = 0xe8; // INX Implied
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert!(test_cpu.cpu.negative);
-    }
-    #[test]
-    fn test_iny() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.y = 6;
-        test_cpu.cpu.mem[0x8000] = 0xc8; // INY Implied
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.y, 7);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.y = 0xff;
-        test_cpu.cpu.mem[0x8000] = 0xc8; // INY Implied
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert!(test_cpu.cpu.zero);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.y = 0b0111_1111;
-        test_cpu.cpu.mem[0x8000] = 0xc8; // INY Implied
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert!(test_cpu.cpu.negative);
-    }
-
-    #[test]
-    fn test_jmp() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.mem[0x8000] = 0x4c; // JMP Absolute
-        test_cpu.cpu.mem[0x8001] = 0x01;
-        test_cpu.cpu.mem[0x8002] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.pc, (0x0101 - 1));
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x1100] = 0x66;
-        test_cpu.cpu.mem[0x1101] = 0x67;
-        test_cpu.cpu.mem[0x8000] = 0x6c; // JMP Indirect
-        test_cpu.cpu.mem[0x8001] = 0x00;
-        test_cpu.cpu.mem[0x8002] = 0x11;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.pc, (0x6667 - 1));
-    }
-
-    #[test]
-    fn test_ldx() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.mem[0x8000] = 0xa2; // LDX Immediate
-        test_cpu.cpu.mem[0x8001] = 0x42;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.x, 0x42);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x0001] = 0x43;
-        test_cpu.cpu.mem[0x8000] = 0xa6; // LDX Zero Page
-        test_cpu.cpu.mem[0x8001] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.x, 0x43);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.y = 0x2;
-        test_cpu.cpu.mem[0x0003] = 0x44;
-        test_cpu.cpu.mem[0x8000] = 0xb6; // LDX Zero Page Y
-        test_cpu.cpu.mem[0x8001] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.x, 0x44);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x0101] = 0x45;
-        test_cpu.cpu.mem[0x8000] = 0xae; // LDX Absolute
-        test_cpu.cpu.mem[0x8001] = 0x01;
-        test_cpu.cpu.mem[0x8002] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.x, 0x45);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.y = 0x3;
-        test_cpu.cpu.mem[0x8000] = 0xbe; // LDX Absolute Y
-        test_cpu.cpu.mem[0x0105] = 0x46;
-        test_cpu.cpu.mem[0x8001] = 0x02;
-        test_cpu.cpu.mem[0x8002] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.x, 0x46);
-    }
-    #[test]
-    fn test_ldy() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.mem[0x8000] = 0xa0; // LDY Immediate
-        test_cpu.cpu.mem[0x8001] = 0x42;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.y, 0x42);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x0001] = 42;
-        test_cpu.cpu.mem[0x8000] = 0xa4; // LDY Zero Page
-        test_cpu.cpu.mem[0x8001] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.y, 42);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.x = 0x2;
-        test_cpu.cpu.mem[0x0003] = 0x44;
-        test_cpu.cpu.mem[0x8000] = 0xb4; // LDY Zero Page X
-        test_cpu.cpu.mem[0x8001] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.y, 0x44);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x0101] = 45;
-        test_cpu.cpu.mem[0x8000] = 0xac; // LDY Absolute
-        test_cpu.cpu.mem[0x8001] = 0x01;
-        test_cpu.cpu.mem[0x8002] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.y, 45);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.x = 0x3;
-        test_cpu.cpu.mem[0x8000] = 0xbc; // LDY Absolute X
-        test_cpu.cpu.mem[0x0105] = 0x46;
-        test_cpu.cpu.mem[0x8001] = 0x02;
-        test_cpu.cpu.mem[0x8002] = 0x01;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.y, 0x46);
-    }
-    #[test]
-    fn test_rti_brk() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.mem[0x8000] = 0x00; // BRK Implied
-        test_cpu.cpu.zero = true; // Set a status flag
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.pc, 0xfffe - 1);
-        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 3], 0x00);
-        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 2], 0x80);
-        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 1], 0x22); // NOTE 6th bit is alwasy set to 1
-
-        test_cpu.cpu.pc += 1;
-        test_cpu.cpu.mem[0xfffe] = 0x40; // RTI
-        test_cpu.cpu.zero = false; // Set a status flag
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.pc, 0x8000);
-        assert_eq!(test_cpu.cpu.pc, 0x8000);
-        assert_eq!(test_cpu.cpu.zero, true);
-    }
-    #[test]
-    fn test_stx() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.x = 55;
-        test_cpu.cpu.mem[0x8000] = 0x86; // STX Zero Page
-        test_cpu.cpu.mem[0x8001] = 0x66;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.mem[0x0066], 55);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.x = 57;
-        test_cpu.cpu.y = 0x01;
-        test_cpu.cpu.mem[0x8000] = 0x96; // STX Zero Page Y
-        test_cpu.cpu.mem[0x8001] = 0x67;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.mem[0x0068], 57);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.x = 58;
-        test_cpu.cpu.mem[0x8000] = 0x8e; // STX Absolute
-        test_cpu.cpu.mem[0x8001] = 0x67;
-        test_cpu.cpu.mem[0x8002] = 0x68;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.mem[0x6867], 58);
-    }
-    #[test]
-    fn test_sty() {
-        let mut test_cpu = MyCpu::default();
-        let mut ppu = Ppu::new(Mirroring::Vertical);
-        test_cpu.cpu.y = 100;
-        test_cpu.cpu.mem[0x8000] = 0x84; // STY Zero Page
-        test_cpu.cpu.mem[0x8001] = 0x66;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.mem[0x0066], 100);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.y = 101;
-        test_cpu.cpu.x = 0x03;
-        test_cpu.cpu.mem[0x8000] = 0x94; // STY Zero Page Y
-        test_cpu.cpu.mem[0x8001] = 0x67;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.mem[0x006a], 101);
-
-        test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.y = 200;
-        test_cpu.cpu.mem[0x8000] = 0x8c; // STY Absolute
-        test_cpu.cpu.mem[0x8001] = 0x67;
-        test_cpu.cpu.mem[0x8002] = 0x44;
-        Instruction::do_instruction(&mut test_cpu, &mut ppu);
-        assert_eq!(test_cpu.cpu.mem[0x4467], 200);
     }
 }

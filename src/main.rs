@@ -1,6 +1,7 @@
 mod cartridge;
 mod cpu;
 mod instructions;
+mod instructions_test;
 mod mapper;
 mod mycpu;
 
@@ -29,8 +30,7 @@ impl Cpu for MyCpu {
             return Ok(());
         }
 
-        Instruction::do_instruction(self, ppu);
-        self.cpu.pc += 1;
+        Instruction::do_instruction(self, Some(ppu));
         self.cycle -= 1;
         Result::Ok(())
     }
