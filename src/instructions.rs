@@ -39,6 +39,8 @@ pub enum InstructionName {
     LDX,
     LDY,
 
+    RTI,
+
     SEC,
     SED,
     SEI,
@@ -231,7 +233,7 @@ impl Instruction {
             0x00 => Instruction {
                 instruction_name: InstructionName::BRK,
                 addressing_mode: AddressingMode::Implied,
-                cycle: 7, // NOTE this is variable on branch success or new page
+                cycle: 7,
             },
             // BVC
             0x50 => Instruction {
@@ -465,6 +467,13 @@ impl Instruction {
                 cycle: 4, // NOTE this is variable on page crossed
             },
 
+            // RTI
+            0x40 => Instruction {
+                instruction_name: InstructionName::RTI,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 6,
+            },
+
             // STA
             0x85 => Instruction {
                 instruction_name: InstructionName::STA,
@@ -606,11 +615,23 @@ impl Instruction {
         mycpu.cycle = instr.cycle;
         println!("Opcode: {:#0x}", opcode); // TODO remove this (or replace with debug)
         match instr.instruction_name {
+            InstructionName::BRK => {
+                let p = mycpu.cpu.carry as u8 |
+                    (mycpu.cpu.zero as u8) << 1 |
+                    (mycpu.cpu.irq_dis as u8) << 2 |
+                    (mycpu.cpu.dec as u8) << 3 |
+                    (mycpu.cpu.b as u8) << 4 |
+                    0b0010_0000 | //ignore_flag
+                    (mycpu.cpu.overflow as u8) << 6 |
+                    (mycpu.cpu.negative as u8) << 7;
+                mycpu.cpu.stack_push((mycpu.cpu.pc & 0xff) as u8);
+                mycpu.cpu.stack_push(((mycpu.cpu.pc >> 8) & 0xff) as u8);
+                mycpu.cpu.stack_push(p);
+                mycpu.cpu.pc = 0xFFFE - 1;
+            }
             InstructionName::LDX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.x = mycpu
-                    .cpu
-                    .memory_read(Some(&mycpu.cartridge), Some(ppu), addr);
+                mycpu.cpu.x = mycpu.data_read(Some(ppu), addr);
                 // ps
                 if mycpu.cpu.x == 0 {
                     mycpu.cpu.zero = true;
@@ -621,9 +642,7 @@ impl Instruction {
             }
             InstructionName::LDY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.y = mycpu
-                    .cpu
-                    .memory_read(Some(&mycpu.cartridge), Some(ppu), addr);
+                mycpu.cpu.y = mycpu.data_read(Some(ppu), addr);
                 // ps
                 if mycpu.cpu.y == 0 {
                     mycpu.cpu.zero = true;
@@ -632,17 +651,24 @@ impl Instruction {
                     mycpu.cpu.negative = true;
                 }
             }
+            InstructionName::RTI => {
+                let p = mycpu.cpu.stack_pop();
+                mycpu.cpu.carry = (p & 0b0000_0001) == 0b0000_0001;
+                mycpu.cpu.zero = (p & 0b0000_0010) == 0b0000_0010;
+                mycpu.cpu.irq_dis = (p & 0b0000_0100) == 0b0000_0100;
+                mycpu.cpu.dec = (p & 0b0000_1000) == 0b0000_1000;
+                mycpu.cpu.b = (p & 0b0001_0000) == 0b0001_0000;
+                mycpu.cpu.overflow = (p & 0b0100_0000) == 0b0100_0000;
+                mycpu.cpu.negative = (p & 0b1000_0000) == 0b1000_0000;
+                mycpu.cpu.pc = ((mycpu.cpu.stack_pop() as u16) << 8) | mycpu.cpu.stack_pop() as u16;
+            }
             InstructionName::STX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu
-                    .cpu
-                    .memory_write(Some(&mycpu.cartridge), Some(ppu), addr, mycpu.cpu.x);
+                mycpu.data_write(Some(ppu), addr, mycpu.cpu.x);
             }
             InstructionName::STY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu
-                    .cpu
-                    .memory_write(Some(&mycpu.cartridge), Some(ppu), addr, mycpu.cpu.y);
+                mycpu.data_write(Some(ppu), addr, mycpu.cpu.y);
             }
             InstructionName::INX => {
                 if mycpu.cpu.x == 0xff {
@@ -898,6 +924,26 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8002] = 0x01;
         Instruction::do_instruction(&mut test_cpu, &mut ppu);
         assert_eq!(test_cpu.cpu.y, 0x46);
+    }
+    #[test]
+    fn test_rti_brk() {
+        let mut test_cpu = MyCpu::default();
+        let mut ppu = Ppu::new(Mirroring::Vertical);
+        test_cpu.cpu.mem[0x8000] = 0x00; // BRK Implied
+        test_cpu.cpu.zero = true; // Set a status flag
+        Instruction::do_instruction(&mut test_cpu, &mut ppu);
+        assert_eq!(test_cpu.cpu.pc, 0xfffe - 1);
+        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 3], 0x00);
+        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 2], 0x80);
+        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 1], 0x22); // NOTE 6th bit is alwasy set to 1
+
+        test_cpu.cpu.pc += 1;
+        test_cpu.cpu.mem[0xfffe] = 0x40; // RTI
+        test_cpu.cpu.zero = false; // Set a status flag
+        Instruction::do_instruction(&mut test_cpu, &mut ppu);
+        assert_eq!(test_cpu.cpu.pc, 0x8000);
+        assert_eq!(test_cpu.cpu.pc, 0x8000);
+        assert_eq!(test_cpu.cpu.zero, true);
     }
     #[test]
     fn test_stx() {
