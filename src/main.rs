@@ -1,6 +1,7 @@
 mod cartridge;
 mod cpu;
 mod instructions;
+mod instructions_test;
 mod mapper;
 mod mycpu;
 

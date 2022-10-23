@@ -89,7 +89,6 @@ impl Default for Cpu6502 {
 #[cfg(test)]
 mod cpu_tests {
     use crate::cpu::Cpu6502;
-    use crate::MyCpu;
 
     #[test]
     fn cpu_init_test() {
@@ -165,18 +164,6 @@ mod cpu_tests {
                 mem: rom_data,
             }
         );
-    }
-
-    #[test]
-    fn read_write_test() {
-        let mut test_cpu = MyCpu::default();
-        test_cpu.data_write(None, 0x0002, 0x69);
-        assert_eq!(test_cpu.data_read(None, 0x0002), 0x69);
-
-        // Read write with mapper
-        test_cpu.cpu.mem[0x8000] = 0x55;
-        assert_eq!(test_cpu.data_read(None, 0x8000), 0x55);
-        assert_eq!(test_cpu.data_read(None, 0xc000), 0x55);
     }
 
     #[test]
