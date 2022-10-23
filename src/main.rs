@@ -1,3 +1,5 @@
+mod cartridge;
+mod cpu;
 mod mapper;
 
 use log::LevelFilter;
