@@ -609,7 +609,7 @@ impl Instruction {
             _ => panic!("Invalid Opcode: {:08x}", opcode),
         }
     }
-    pub fn do_instruction(mycpu: &mut MyCpu, ppu: &mut Ppu) {
+    pub fn do_instruction(mycpu: &mut MyCpu, ppu: Option<&mut Ppu>) {
         let opcode: u8 = mycpu.cpu.mem[mycpu.cpu.pc as usize];
         let instr = Instruction::get_instruction(opcode);
         mycpu.cycle = instr.cycle;
@@ -633,7 +633,7 @@ impl Instruction {
             }
             InstructionName::LDX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.x = mycpu.data_read(Some(ppu), addr);
+                mycpu.cpu.x = mycpu.data_read(ppu, addr);
                 // ps
                 if mycpu.cpu.x == 0 {
                     mycpu.cpu.zero = true;
@@ -644,7 +644,7 @@ impl Instruction {
             }
             InstructionName::LDY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.y = mycpu.data_read(Some(ppu), addr);
+                mycpu.cpu.y = mycpu.data_read(ppu, addr);
                 // ps
                 if mycpu.cpu.y == 0 {
                     mycpu.cpu.zero = true;
@@ -666,11 +666,11 @@ impl Instruction {
             }
             InstructionName::STX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.data_write(Some(ppu), addr, mycpu.cpu.x);
+                mycpu.data_write(ppu, addr, mycpu.cpu.x);
             }
             InstructionName::STY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.data_write(Some(ppu), addr, mycpu.cpu.y);
+                mycpu.data_write(ppu, addr, mycpu.cpu.y);
             }
             InstructionName::INX => {
                 if mycpu.cpu.x == 0xff {
@@ -703,6 +703,7 @@ impl Instruction {
             }
             _ => panic!("Instruction not available"),
         }
+        mycpu.cpu.pc += 1; // Next instruction
     }
 }
 
