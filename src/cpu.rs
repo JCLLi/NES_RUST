@@ -1,7 +1,3 @@
-use crate::cartridge::Cartridge;
-use crate::mapper::get_mapped_address;
-use crate::Ppu;
-
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Cpu6502 {
     // TODO make these not all public
@@ -53,43 +49,6 @@ impl Cpu6502 {
         }
     }
 
-    pub fn memory_write(
-        &mut self,
-        cartridge: Option<&Cartridge>,
-        _ppu: Option<&mut Ppu>,
-        addr: u16,
-        data: u8,
-    ) {
-        if addr >= 0x8000 {
-            if cartridge != None {
-                // TODO NROM does not have a write option but other do so add that here
-            }
-        } else {
-            self.mem[addr as usize] = data;
-        }
-    }
-
-    pub fn memory_read(
-        &mut self,
-        cartridge: Option<&Cartridge>,
-        _ppu: Option<&Ppu>,
-        addr: u16,
-    ) -> u8 {
-        if addr >= 0x8000 {
-            if cartridge != None {
-                self.mem[get_mapped_address(
-                    cartridge.as_ref().unwrap().mapper_number,
-                    addr,
-                    cartridge.unwrap().prg_rom_size_in_16kb,
-                ) as usize]
-            } else {
-                panic!("Accessing ROM without cartridge")
-            }
-        } else {
-            self.mem[addr as usize]
-        }
-    }
-
     pub fn stack_push(&mut self, value: u8) {
         self.mem[self.sp as usize] = value;
         self.sp -= 1;
@@ -129,7 +88,6 @@ impl Default for Cpu6502 {
 
 #[cfg(test)]
 mod cpu_tests {
-    use crate::cartridge::Cartridge;
     use crate::cpu::Cpu6502;
 
     #[test]
@@ -205,24 +163,6 @@ mod cpu_tests {
 
                 mem: rom_data,
             }
-        );
-    }
-
-    #[test]
-    fn read_write_test() {
-        let mut test_cpu = Cpu6502::default();
-        test_cpu.memory_write(None, None, 0x0002, 0x69);
-        assert_eq!(test_cpu.memory_read(None, None, 0x0002), 0x69);
-
-        // Read write with mapper
-        test_cpu.mem[0x8000] = 0x55;
-        assert_eq!(
-            test_cpu.memory_read(Some(&Cartridge::default()), None, 0x8000),
-            0x55
-        );
-        assert_eq!(
-            test_cpu.memory_read(Some(&Cartridge::default()), None, 0xc000),
-            0x55
         );
     }
 

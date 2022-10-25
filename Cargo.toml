@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 tudelft-nes-ppu = "1.0.4"
-tudelft-nes-test = "1.0.0"
+tudelft-nes-test = "1.1.4"
 env_logger = "0.9.0"
 log = "0.4.17"
 

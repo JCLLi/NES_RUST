@@ -6,13 +6,12 @@ pub fn get_mapped_address(mapper_number: u8, addr: u16, prg_rom_size_in_16kb: u8
                 return addr;
             }
             if prg_rom_size_in_16kb == 2 {
+                return addr;
+            }
+            if addr < 0xc000 {
                 addr
             } else {
-                if addr < 0xc000 {
-                    addr
-                } else {
-                    addr - 16384
-                }
+                addr - 16384
             }
         }
         _ => panic!("Mapper type not implemented yet"),

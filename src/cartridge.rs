@@ -2,33 +2,33 @@
 pub struct Cartridge {
     // HEADER
     pub prg_rom_size_in_16kb: u8,
-    chr_rom_size_in_8kb: u8,
+    pub chr_rom_size_in_8kb: u8,
 
     // Flags 6
     pub mapper_number: u8,
-    mirroring_control: bool,
-    trainer_available: bool,
-    battery_backed_prg_ram_available: bool,
-    mirroring_mode: bool,
+    pub mirroring_control: bool,
+    pub trainer_available: bool,
+    pub battery_backed_prg_ram_available: bool,
+    pub mirroring_mode: bool,
 
     // Flags 7
     // Upper nibble included in field of Flag 6
-    nes_2_0_format: bool,
-    playchoice_10: bool,
-    vs_unisystem: bool,
+    pub nes_2_0_format: bool,
+    pub playchoice_10: bool,
+    pub vs_unisystem: bool,
 
     // Flags 8
-    prg_ram_size_in_8kb: u8, // TODO according to iNES format specs a RAM of 0 should still be 8 kB
+    pub prg_ram_size_in_8kb: u8, // TODO according to iNES format specs a RAM of 0 should still be 8 kB
 
     // Flags 9
-    tv_system_mode: bool,
+    pub tv_system_mode: bool,
 
     // Flag 10
-    prg_ram_present: bool,
-    bus_conflicts: bool,
+    pub prg_ram_present: bool,
+    pub bus_conflicts: bool,
 
-    prg_rom_data: Vec<u8>,
-    chr_rom_data: Vec<u8>,
+    pub prg_rom_data: Vec<u8>,
+    pub chr_rom_data: Vec<u8>,
 }
 
 impl Cartridge {

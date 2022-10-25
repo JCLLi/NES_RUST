@@ -1106,9 +1106,9 @@ dependencies = [
 
 [[package]]
 name = "tudelft-nes-test"
-version = "1.0.0"
+version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc79648b79f8899012fe1ef0db6c6edf9a88ccfd0cab4ec595ee74ef15ca431f"
+checksum = "9ebe8a99703b9b38365070733002d3eb2eea0c4132ad8ae45b43b7be1a93f7f9"
 dependencies = [
  "bitflags",
  "log",
