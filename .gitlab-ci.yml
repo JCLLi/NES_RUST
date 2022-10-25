@@ -1,0 +1,11 @@
+image: "rust:1.63.0"
+
+test:build:
+  script:
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo build --workspace --verbose
+    - rustup component add clippy
+    - rustup component add rustfmt
+    - cargo clippy -- -D warnings
+    - cargo fmt --check
+    - cargo test --workspace --verbose
