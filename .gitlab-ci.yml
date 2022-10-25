@@ -9,3 +9,5 @@ test:build:
     - cargo clippy -- -D warnings
     - cargo fmt --check
     - cargo test --workspace --verbose
+  only:
+    - merge_requests
