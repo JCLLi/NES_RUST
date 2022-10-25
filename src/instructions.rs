@@ -1,4 +1,3 @@
-use crate::mapper::get_mapped_address;
 use crate::Cpu6502;
 use crate::MyCpu;
 use crate::Ppu;
@@ -709,11 +708,7 @@ impl Instruction {
 
 pub fn get_jump_addr(mycpu: &mut MyCpu, addr: u16) -> u16 {
     if addr >= 0x8000 {
-        get_mapped_address(
-            mycpu.cartridge.mapper_number,
-            addr,
-            mycpu.cartridge.prg_rom_size_in_16kb,
-        )
+        mycpu.mapper.get_mapper_address(addr)
     } else {
         addr
     }

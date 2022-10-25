@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod instruction_tests {
     use crate::instructions::Instruction;
-    use crate::mapper::get_mapped_address;
     use crate::MyCpu;
 
     #[test]
@@ -149,25 +148,10 @@ mod instruction_tests {
         let mut test_cpu = MyCpu::default();
         test_cpu.cpu.mem[0x8000] = 0x00; // BRK Implied
         test_cpu.cpu.zero = true; // Set a status flag
-        test_cpu.cpu.mem[get_mapped_address(
-            test_cpu.cartridge.mapper_number,
-            0xfffe,
-            test_cpu.cartridge.prg_rom_size_in_16kb,
-        ) as usize] = 0x66; // Set IRQ vector
-        test_cpu.cpu.mem[get_mapped_address(
-            test_cpu.cartridge.mapper_number,
-            0xffff,
-            test_cpu.cartridge.prg_rom_size_in_16kb,
-        ) as usize] = 0x07; // Set IRQ vector
+        test_cpu.cpu.mem[test_cpu.mapper.get_mapper_address(0xfffe) as usize] = 0x66; // Set IRQ vector
+        test_cpu.cpu.mem[test_cpu.mapper.get_mapper_address(0xffff) as usize] = 0x07; // Set IRQ vector
         Instruction::do_instruction(&mut test_cpu, None);
-        assert_eq!(
-            test_cpu.cpu.pc,
-            get_mapped_address(
-                test_cpu.cartridge.mapper_number,
-                0x0766,
-                test_cpu.cartridge.prg_rom_size_in_16kb
-            )
-        );
+        assert_eq!(test_cpu.cpu.pc, test_cpu.mapper.get_mapper_address(0x0766));
         assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 3], 0x00);
         assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 2], 0x80);
         assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 1], 0x22); // NOTE 6th bit is alwasy set to 1

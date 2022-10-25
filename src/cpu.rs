@@ -21,7 +21,7 @@ pub struct Cpu6502 {
 
 impl Cpu6502 {
     pub fn new(rom: &[u8]) -> Cpu6502 {
-        // TODO this only works for NROM! Make some mapper init function.
+        // TODO maybe this is the same for all mappers, should check
         let train_avail = (rom[6] & 0b100) == 0b100;
         let data_offset: usize = if train_avail { 16 + 512 } else { 16 }; //Start of prg_rom
         let mut rom_data: [u8; 0xffff] = [0; 0xffff];
