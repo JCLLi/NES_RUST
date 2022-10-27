@@ -1,3 +1,4 @@
+use crate::instructions::AddressingMode::Accumulator;
 use crate::mapper::get_mapped_address;
 use crate::Cpu6502;
 use crate::MyCpu;
@@ -29,6 +30,8 @@ pub enum InstructionName {
     DEX,
     DEY,
 
+    EOR,
+
     INC,
     INX,
     INY,
@@ -38,9 +41,15 @@ pub enum InstructionName {
     LDA,
     LDX,
     LDY,
+    LSR,
 
+    ORA,
+
+    ROL,
+    ROR,
     RTI,
 
+    SBC,
     SEC,
     SED,
     SEI,
@@ -338,7 +347,6 @@ impl Instruction {
                 addressing_mode: AddressingMode::Absolute,
                 cycle: 4,
             },
-
             // DEC
             0xc6 => Instruction {
                 instruction_name: InstructionName::DEC,
@@ -372,7 +380,47 @@ impl Instruction {
                 addressing_mode: AddressingMode::Implied,
                 cycle: 2,
             },
-
+            // EOR
+            0x49 => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0x45 => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0x55 => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0x4D => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 4,
+            },
+            0x5D => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0x59 => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 4,
+            },
+            0x41 => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 6,
+            },
+            0x51 => Instruction {
+                instruction_name: InstructionName::EOR,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 5,
+            },
             // LDA
             0xa9 => Instruction {
                 instruction_name: InstructionName::LDA,
@@ -466,14 +514,79 @@ impl Instruction {
                 addressing_mode: AddressingMode::AbsoluteX,
                 cycle: 4, // NOTE this is variable on page crossed
             },
-
+            // LSR
+            0x4a => Instruction {
+                instruction_name: InstructionName::LSR,
+                addressing_mode: AddressingMode::Accumulator,
+                cycle: 2,
+            },
+            0x46 => Instruction {
+                instruction_name: InstructionName::LSR,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0x56 => Instruction {
+                instruction_name: InstructionName::LSR,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0x4e => Instruction {
+                instruction_name: InstructionName::LSR,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0x5e => Instruction {
+                instruction_name: InstructionName::LSR,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            // ORA
+            0x09 => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0x05 => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0x15 => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0x0D => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 4,
+            },
+            0x1d => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0x19 => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 4,
+            },
+            0x01 => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 6,
+            },
+            0x11 => Instruction {
+                instruction_name: InstructionName::ORA,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 5,
+            },
             // RTI
             0x40 => Instruction {
                 instruction_name: InstructionName::RTI,
                 addressing_mode: AddressingMode::Implied,
                 cycle: 6,
             },
-
             // STA
             0x85 => Instruction {
                 instruction_name: InstructionName::STA,
@@ -543,7 +656,6 @@ impl Instruction {
                 addressing_mode: AddressingMode::Absolute,
                 cycle: 3,
             },
-
             // INC
             0xe6 => Instruction {
                 instruction_name: InstructionName::INC,
@@ -588,6 +700,58 @@ impl Instruction {
                 addressing_mode: AddressingMode::Indirect,
                 cycle: 5,
             },
+            // ROR
+            0x6a => Instruction {
+                instruction_name: InstructionName::ROR,
+                addressing_mode: AddressingMode::Accumulator,
+                cycle: 2,
+            },
+            0x66 => Instruction {
+                instruction_name: InstructionName::ROR,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0x76 => Instruction {
+                instruction_name: InstructionName::ROR,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0x6e => Instruction {
+                instruction_name: InstructionName::ROR,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0x7e => Instruction {
+                instruction_name: InstructionName::ROR,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            // ROL
+            0x2a => Instruction {
+                instruction_name: InstructionName::ROL,
+                addressing_mode: AddressingMode::Accumulator,
+                cycle: 2,
+            },
+            0x26 => Instruction {
+                instruction_name: InstructionName::ROL,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0x36 => Instruction {
+                instruction_name: InstructionName::ROL,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0x2e => Instruction {
+                instruction_name: InstructionName::ROL,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0x3e => Instruction {
+                instruction_name: InstructionName::ROL,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
             // SEC
             0x38 => Instruction {
                 instruction_name: InstructionName::SEC,
@@ -606,6 +770,47 @@ impl Instruction {
                 addressing_mode: AddressingMode::Implied,
                 cycle: 2,
             },
+            // SBC
+            0xe9 => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0xe5 => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0xf5 => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0xed => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 4,
+            },
+            0xfd => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0xf9 => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 4,
+            },
+            0xe1 => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 6,
+            },
+            0xf1 => Instruction {
+                instruction_name: InstructionName::SBC,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 5,
+            },
             _ => panic!("Invalid Opcode: {:08x}", opcode),
         }
     }
@@ -615,6 +820,69 @@ impl Instruction {
         mycpu.cycle = instr.cycle;
         println!("Opcode: {:#0x}", opcode); // TODO remove this (or replace with debug)
         match instr.instruction_name {
+            InstructionName::ADC => {
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                let m = mycpu.data_read(&ppu, addr) as u16;
+
+                // needed for overflow flag
+                let a_is_positive = mycpu.cpu.a < 0b1000_0000;
+                let m_is_positive = m < 0b1000_0000;
+                let both_operands_are_positive = a_is_positive && m_is_positive;
+                let both_operands_are_negative = !a_is_positive && !m_is_positive;
+
+                // operation
+                let mut res: u16 = (mycpu.cpu.a as u16) + m;
+                if mycpu.cpu.carry {
+                    res += 1;
+                }
+                mycpu.cpu.a = (res & 0x00FF) as u8;
+
+                //flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+
+                mycpu.cpu.carry = (res & 0b1_0000_0000) == 0b1_0000_0000;
+
+                mycpu.cpu.overflow = both_operands_are_positive && res > 0b0111_1111
+                    || both_operands_are_negative && res < 0b1000_0000
+            }
+            InstructionName::AND => {
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                let m = mycpu.data_read(&ppu, addr);
+
+                // operation
+                mycpu.cpu.a &= m;
+
+                //flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+            }
+            InstructionName::ASL => {
+                let shift_accumulator = matches!(instr.addressing_mode, Accumulator);
+                let mut addr = 0x00;
+
+                let m = if shift_accumulator {
+                    mycpu.cpu.a
+                } else {
+                    addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.data_read(&ppu, addr)
+                };
+
+                // operation
+                let res: u16 = (m as u16) << 1;
+
+                // Writeback
+                if shift_accumulator {
+                    mycpu.cpu.a = (res & 0xFF) as u8;
+                } else {
+                    mycpu.data_write(&ppu, addr, (res & 0xFF) as u8);
+                }
+
+                //flags
+                mycpu.cpu.negative = res & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = res & 0xFF == 0;
+                mycpu.cpu.carry = res & 0x100 == 0x100;
+            }
             InstructionName::BRK => {
                 // NOTE some assembles make this instruction 2 bytes, this implementation is only 1
                 let p = mycpu.cpu.carry as u8 |
@@ -625,15 +893,27 @@ impl Instruction {
                     0b0010_0000 | //ignore_flag
                     (mycpu.cpu.overflow as u8) << 6 |
                     (mycpu.cpu.negative as u8) << 7;
+                mycpu.cpu.pc += 1;
                 mycpu.cpu.stack_push((mycpu.cpu.pc & 0xff) as u8);
                 mycpu.cpu.stack_push(((mycpu.cpu.pc >> 8) & 0xff) as u8);
                 mycpu.cpu.stack_push(p);
                 mycpu.cpu.pc = get_irq_addr(mycpu) - 1; // NOTE pc incremented after each instruction
                 mycpu.cpu.b = true; // NOTE this has to happen after pushing status register
             }
+            InstructionName::EOR => {
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                let m = mycpu.data_read(&ppu, addr);
+
+                // operation
+                mycpu.cpu.a ^= m;
+
+                //flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+            }
             InstructionName::LDX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.x = mycpu.data_read(ppu, addr);
+                mycpu.cpu.x = mycpu.data_read(&ppu, addr);
                 // ps
                 if mycpu.cpu.x == 0 {
                     mycpu.cpu.zero = true;
@@ -644,7 +924,7 @@ impl Instruction {
             }
             InstructionName::LDY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.cpu.y = mycpu.data_read(ppu, addr);
+                mycpu.cpu.y = mycpu.data_read(&ppu, addr);
                 // ps
                 if mycpu.cpu.y == 0 {
                     mycpu.cpu.zero = true;
@@ -652,6 +932,49 @@ impl Instruction {
                 if mycpu.cpu.y & 0b1000_0000 == 0b1000_0000 {
                     mycpu.cpu.negative = true;
                 }
+            }
+            InstructionName::LSR => {
+                let shift_accumulator = matches!(instr.addressing_mode, Accumulator);
+                let mut addr = 0x00;
+
+                let m = if shift_accumulator {
+                    mycpu.cpu.a
+                } else {
+                    addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.data_read(&ppu, addr)
+                };
+
+                // Carry flag
+                mycpu.cpu.carry = m & 0x1 == 0x1;
+
+                // operation
+                let res = m >> 1;
+
+                // Writeback
+                if shift_accumulator {
+                    mycpu.cpu.a = res;
+                } else {
+                    mycpu.data_write(&ppu, addr, res);
+                }
+
+                //flags
+                mycpu.cpu.negative = false; // The 7th bit cannot be 1 when shifted to the right
+                mycpu.cpu.zero = m == 0;
+                /* Carry already determined above */
+            }
+            InstructionName::ORA => {
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                let m = mycpu.data_read(&ppu, addr);
+
+                // pc
+                mycpu.cpu.pc += 1;
+
+                // operation
+                mycpu.cpu.a |= m;
+
+                //flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
             }
             InstructionName::RTI => {
                 let p = mycpu.cpu.stack_pop();
@@ -666,11 +989,11 @@ impl Instruction {
             }
             InstructionName::STX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.data_write(ppu, addr, mycpu.cpu.x);
+                mycpu.data_write(&ppu, addr, mycpu.cpu.x);
             }
             InstructionName::STY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                mycpu.data_write(ppu, addr, mycpu.cpu.y);
+                mycpu.data_write(&ppu, addr, mycpu.cpu.y);
             }
             InstructionName::INX => {
                 if mycpu.cpu.x == 0xff {
@@ -701,6 +1024,90 @@ impl Instruction {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
                 mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
             }
+            InstructionName::ROL => {
+                let shift_accumulator = matches!(instr.addressing_mode, Accumulator);
+                let mut addr = 0x00;
+
+                let m = if shift_accumulator {
+                    mycpu.cpu.a
+                } else {
+                    addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.data_read(&ppu, addr)
+                };
+
+                // operation
+                let res: u16 = ((m as u16) << 1) | ((m as u16) >> 7);
+
+                // Writeback
+                if shift_accumulator {
+                    mycpu.cpu.a = (res & 0xFF) as u8;
+                } else {
+                    mycpu.data_write(&ppu, addr, (res & 0xFF) as u8);
+                }
+
+                //flags
+                mycpu.cpu.negative = res & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = res & 0xFF == 0;
+                mycpu.cpu.carry = res & 0x100 == 0x100;
+            }
+            InstructionName::ROR => {
+                let shift_accumulator = matches!(instr.addressing_mode, Accumulator);
+                let mut addr = 0x00;
+
+                let m = if shift_accumulator {
+                    mycpu.cpu.a
+                } else {
+                    addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.data_read(&ppu, addr)
+                };
+
+                // Carry flag
+                mycpu.cpu.carry = m & 0x1 == 0x1;
+
+                // operation
+                let res = (m >> 1) | (m << 7);
+
+                // Writeback
+                if shift_accumulator {
+                    mycpu.cpu.a = res;
+                } else {
+                    mycpu.data_write(&ppu, addr, res);
+                }
+
+                //flags
+                mycpu.cpu.negative = res & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = res == 0;
+                /* Carry already determined above */
+            }
+            InstructionName::SBC => {
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                let m = mycpu.data_read(&ppu, addr) as u16;
+
+                // needed for overflow flag
+                let a_is_positive = mycpu.cpu.a < 0b1000_0000;
+                let m_is_positive = m < 0b1000_0000;
+                let a_positive_and_m_negative = a_is_positive && !m_is_positive;
+                let a_negative_and_m_positive = !a_is_positive && m_is_positive;
+
+                // operation
+                let res: u16;
+                if mycpu.cpu.a >= m as u8 {
+                    res = (mycpu.cpu.a as u16) - m;
+                    mycpu.cpu.carry = false;
+                } else {
+                    res = 0x100 + (mycpu.cpu.a as u16) - m;
+                    mycpu.cpu.carry = true;
+                }
+                mycpu.cpu.a = (res & 0x00FF) as u8;
+
+                //flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+                /* carry flag has already been determined in previous codeblock */
+                mycpu.cpu.overflow = a_positive_and_m_negative && res > 0b0111_1111
+                    || a_negative_and_m_positive && res < 0b1000_0000;
+            }
+
             _ => panic!("Instruction not available"),
         }
         mycpu.cpu.pc += 1; // Next instruction
@@ -720,7 +1127,7 @@ pub fn get_jump_addr(mycpu: &mut MyCpu, addr: u16) -> u16 {
 }
 
 pub fn get_irq_addr(mycpu: &mut MyCpu) -> u16 {
-    ((mycpu.data_read(None, 0xffff) as u16) << 8) | mycpu.data_read(None, 0xfffe) as u16
+    ((mycpu.data_read(&None, 0xffff) as u16) << 8) | mycpu.data_read(&None, 0xfffe) as u16
 }
 
 pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 {
@@ -772,12 +1179,12 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
             ret_addr
         }
         AddressingMode::IndirectX => {
-            let ret_addr: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize] + cpu.x) as u16;
+            let ret_addr: u16 = cpu.mem[(cpu.mem[(cpu.pc + 1) as usize] + cpu.x) as usize] as u16;
             cpu.pc += 1;
             ret_addr & 0xFF
         }
         AddressingMode::IndirectY => {
-            let ret_addr: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize] + cpu.x) as u16;
+            let ret_addr: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize] + cpu.y) as u16;
             cpu.pc += 1;
             ret_addr & 0xFF
         }

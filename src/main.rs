@@ -111,7 +111,7 @@ impl TestableCpu for MyCpu {
             },
             cycle: 0,
         };
-        cpu.data_read(None, address)
+        cpu.data_read(&None, address)
     }
 }
 
