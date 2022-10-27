@@ -30,7 +30,7 @@ impl Cpu for MyCpu {
             return Ok(());
         }
 
-        Instruction::do_instruction(self, Some(ppu));
+        Instruction::do_instruction(self, ppu);
         self.cycle -= 1;
         Result::Ok(())
     }
@@ -58,8 +58,9 @@ impl Cpu for MyCpu {
             self.cpu.stack_push(((self.cpu.pc >> 8) & 0xff) as u8);
             self.cpu.stack_push(p);
             self.cpu.irq_dis = true;
-            self.cpu.pc = (self.data_read(&None, 0xFFFA) as u16)
-                & ((self.data_read(&None, 0xFFFB) as u16) << 8);
+            let mut ppu = Ppu::new(Mirroring::Vertical);
+            self.cpu.pc = (self.data_read(&mut ppu, 0xFFFA) as u16)
+                & ((self.data_read(&mut ppu, 0xFFFB) as u16) << 8);
         }
     }
 }
@@ -89,6 +90,7 @@ impl TestableCpu for MyCpu {
         for i in 0..self.cartridge.chr_rom_data.len() {
             chr_data.push(self.cartridge.chr_rom_data[i]);
         }
+        let mut ppu = Ppu::new(Mirroring::Vertical);
         let mut cpu: MyCpu = MyCpu {
             cpu: self.cpu,
             cartridge: Cartridge {
@@ -111,7 +113,7 @@ impl TestableCpu for MyCpu {
             },
             cycle: 0,
         };
-        cpu.data_read(&None, address)
+        cpu.data_read(&mut ppu, address)
     }
 }
 
