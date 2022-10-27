@@ -39,7 +39,7 @@ impl Cpu for MyCpu {
     }
 
     fn ppu_read_chr_rom(&self, offset: u16) -> u8 {
-        self.cartridge.chr_rom_data[offset as usize]
+        self.mapper.get_chr_data(&self.cartridge, offset)
     }
 
     fn non_maskable_interrupt(&mut self) {

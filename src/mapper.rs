@@ -161,6 +161,46 @@ impl MapperType {
             }
         }
     }
+
+    pub fn get_chr_data(&self, cart: &Cartridge, offset: u16) -> u8 {
+        let mut chr_bank: [u8; 8192] = [0; 8192];
+        match self {
+            MapperType::Nrom { .. } => cart.chr_rom_data[offset as usize],
+            MapperType::MMC1 {
+                mirroring: _,
+                prg_rom_bank_mode: _,
+                chr_rom_bank_mode,
+                chr_bank0,
+                chr_bank1,
+                prg_bank: _,
+                mmc1b: _,
+                // Stored values
+                shift_register: _,
+                amount_shifted: _,
+            } => {
+                if *chr_rom_bank_mode {
+                    for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
+                        if i < 0x0fff {
+                            *mem_ref = cart.chr_rom_data
+                                [(i + 4096 * (chr_bank0 & 0b1110) as usize) as usize];
+                        } else {
+                            *mem_ref = cart.chr_rom_data
+                                [(i + 4096 * (chr_bank0 & 0b1111) as usize) as usize];
+                        }
+                    }
+                } else {
+                    for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
+                        if i < 0x0fff {
+                            *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank0 as usize) as usize];
+                        } else {
+                            *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank1 as usize) as usize];
+                        }
+                    }
+                }
+                chr_bank[offset as usize]
+            }
+        }
+    }
 }
 
 #[cfg(test)]
