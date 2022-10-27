@@ -40,7 +40,27 @@ impl Cpu for MyCpu {
     }
 
     fn non_maskable_interrupt(&mut self) {
-        todo!()
+        if !self.cpu.irq_dis {
+            if self.cycle != 0 {
+                self.cycle = 0;
+            }
+
+            let p = self.cpu.carry as u8 |
+                (self.cpu.zero as u8) << 1 |
+                (self.cpu.irq_dis as u8) << 2 |
+                (self.cpu.dec as u8) << 3 |
+                (self.cpu.b as u8) << 4 |
+                0b0010_0000 | //ignore_flag
+                (self.cpu.overflow as u8) << 6 |
+                (self.cpu.negative as u8) << 7;
+
+            self.cpu.stack_push((self.cpu.pc & 0xff) as u8);
+            self.cpu.stack_push(((self.cpu.pc >> 8) & 0xff) as u8);
+            self.cpu.stack_push(p);
+            self.cpu.irq_dis = true;
+            self.cpu.pc = (self.data_read(None, 0xFFFA) as u16)
+                & ((self.data_read(None, 0xFFFB) as u16) << 8);
+        }
     }
 }
 
