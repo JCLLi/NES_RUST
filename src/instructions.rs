@@ -37,6 +37,7 @@ pub enum InstructionName {
     INY,
 
     JMP,
+    JSR,
 
     LDA,
     LDX,
@@ -48,6 +49,9 @@ pub enum InstructionName {
     ROL,
     ROR,
     RTI,
+    RTS,
+
+    NOP,
 
     SBC,
     SEC,
@@ -540,6 +544,12 @@ impl Instruction {
                 addressing_mode: AddressingMode::AbsoluteX,
                 cycle: 7,
             },
+            // NOP
+            0xea => Instruction {
+                instruction_name: InstructionName::NOP,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 2,
+            },
             // ORA
             0x09 => Instruction {
                 instruction_name: InstructionName::ORA,
@@ -587,6 +597,13 @@ impl Instruction {
                 addressing_mode: AddressingMode::Implied,
                 cycle: 6,
             },
+            // RTS
+            0x60 => Instruction {
+                instruction_name: InstructionName::RTS,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 6,
+            },
+
             // STA
             0x85 => Instruction {
                 instruction_name: InstructionName::STA,
@@ -699,6 +716,12 @@ impl Instruction {
                 instruction_name: InstructionName::JMP,
                 addressing_mode: AddressingMode::Indirect,
                 cycle: 5,
+            },
+            // JSR
+            0x20 => Instruction {
+                instruction_name: InstructionName::JSR,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
             },
             // ROR
             0x6a => Instruction {
@@ -883,6 +906,48 @@ impl Instruction {
                 mycpu.cpu.zero = res & 0xFF == 0;
                 mycpu.cpu.carry = res & 0x100 == 0x100;
             }
+            InstructionName::BCC => {
+                if !mycpu.cpu.carry {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
+            InstructionName::BCS => {
+                if mycpu.cpu.carry {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
+            InstructionName::BEQ => {
+                if mycpu.cpu.zero {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
+            InstructionName::BIT => {
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                let data = mycpu.data_read(&ppu, addr);
+                mycpu.cpu.negative = (data & 0b1000_0000) == 0b1000_0000;
+                mycpu.cpu.overflow = (data & 0b100_0000) == 0b100_0000;
+            }
+            InstructionName::BMI => {
+                if mycpu.cpu.negative {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
+            InstructionName::BNE => {
+                if !mycpu.cpu.zero {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
+            InstructionName::BPL => {
+                if !mycpu.cpu.negative {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
             InstructionName::BRK => {
                 // NOTE some assembles make this instruction 2 bytes, this implementation is only 1
                 let p = mycpu.cpu.carry as u8 |
@@ -900,6 +965,18 @@ impl Instruction {
                 mycpu.cpu.pc = get_irq_addr(mycpu) - 1; // NOTE pc incremented after each instruction
                 mycpu.cpu.b = true; // NOTE this has to happen after pushing status register
             }
+            InstructionName::BVC => {
+                if !mycpu.cpu.overflow {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
+            InstructionName::BVS => {
+                if mycpu.cpu.overflow {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                    mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+                }
+            }
             InstructionName::EOR => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
                 let m = mycpu.data_read(&ppu, addr);
@@ -914,24 +991,14 @@ impl Instruction {
             InstructionName::LDX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
                 mycpu.cpu.x = mycpu.data_read(&ppu, addr);
-                // ps
-                if mycpu.cpu.x == 0 {
-                    mycpu.cpu.zero = true;
-                }
-                if mycpu.cpu.x & 0b1000_0000 == 0b1000_0000 {
-                    mycpu.cpu.negative = true;
-                }
+                mycpu.cpu.zero = mycpu.cpu.x == 0;
+                mycpu.cpu.negative = mycpu.cpu.x & 0b1000_0000 == 0b1000_0000;
             }
             InstructionName::LDY => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
                 mycpu.cpu.y = mycpu.data_read(&ppu, addr);
-                // ps
-                if mycpu.cpu.y == 0 {
-                    mycpu.cpu.zero = true;
-                }
-                if mycpu.cpu.y & 0b1000_0000 == 0b1000_0000 {
-                    mycpu.cpu.negative = true;
-                }
+                mycpu.cpu.zero = mycpu.cpu.y == 0;
+                mycpu.cpu.negative = mycpu.cpu.y & 0b1000_0000 == 0b1000_0000;
             }
             InstructionName::LSR => {
                 let shift_accumulator = matches!(instr.addressing_mode, Accumulator);
@@ -987,6 +1054,12 @@ impl Instruction {
                 mycpu.cpu.negative = (p & 0b1000_0000) == 0b1000_0000;
                 mycpu.cpu.pc = ((mycpu.cpu.stack_pop() as u16) << 8) | mycpu.cpu.stack_pop() as u16;
             }
+            InstructionName::RTS => {
+                mycpu.cpu.pc = ((mycpu.cpu.stack_pop() as u16) << 8) | mycpu.cpu.stack_pop() as u16;
+            }
+            InstructionName::NOP => {
+                // NOTE pc counter incremented at the end
+            }
             InstructionName::STX => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
                 mycpu.data_write(&ppu, addr, mycpu.cpu.x);
@@ -996,31 +1069,24 @@ impl Instruction {
                 mycpu.data_write(&ppu, addr, mycpu.cpu.y);
             }
             InstructionName::INX => {
-                if mycpu.cpu.x == 0xff {
-                    // Handle overflow
-                    mycpu.cpu.zero = true;
-                    mycpu.cpu.x = 0;
-                } else {
-                    mycpu.cpu.x += 1;
-                }
-                if mycpu.cpu.x & 0b1000_0000 == 0b1000_0000 {
-                    mycpu.cpu.negative = true;
-                }
+                mycpu.cpu.x = mycpu.cpu.x.wrapping_add(1);
+                mycpu.cpu.negative = mycpu.cpu.x & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.x == 0;
             }
             InstructionName::INY => {
-                if mycpu.cpu.y == 0xff {
-                    // Handle overflow
-                    mycpu.cpu.zero = true;
-                    mycpu.cpu.y = 0;
-                } else {
-                    mycpu.cpu.y += 1;
-                }
-                if mycpu.cpu.y & 0b1000_0000 == 0b1000_0000 {
-                    mycpu.cpu.negative = true;
-                }
+                mycpu.cpu.y = mycpu.cpu.y.wrapping_add(1);
+                mycpu.cpu.negative = mycpu.cpu.y & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.y == 0;
             }
             InstructionName::JMP => {
-                // pc
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
+                mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
+            }
+            InstructionName::JSR => {
+                mycpu.cpu.pc += 2; // JSR is always 3 bytes so return point that minus 1
+                mycpu.cpu.stack_push((mycpu.cpu.pc & 0xff) as u8);
+                mycpu.cpu.stack_push(((mycpu.cpu.pc >> 8) & 0xff) as u8);
+                mycpu.cpu.pc -= 2;
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
                 mycpu.cpu.pc = get_jump_addr(mycpu, addr) - 1; // NOTE pc incremented after each instruction
             }
@@ -1169,7 +1235,17 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
             cpu.pc += 1;
             (cpu.mem[cpu.pc as usize] + cpu.y) as u16 & 0xFF
         }
-        AddressingMode::Relative => cpu.pc + (cpu.mem[(cpu.pc + 1) as usize] + 1) as u16,
+        AddressingMode::Relative => {
+            let add = cpu.mem[(cpu.pc + 1) as usize];
+            if add & 0b1000_0000 != 0b1000_0000 {
+                // Positive
+                cpu.pc += (add & 0b111_1111) as u16;
+            } else {
+                // Negative
+                cpu.pc -= add.wrapping_neg() as u16;
+            }
+            cpu.pc + 2
+        }
         AddressingMode::Indirect => {
             let pl_addr: u16 = (cpu.mem[(cpu.pc + 2) as usize] as u16) << 8
                 | cpu.mem[(cpu.pc + 1) as usize] as u16;
@@ -1186,7 +1262,7 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
         AddressingMode::IndirectY => {
             let ret_addr: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize] + cpu.y) as u16;
             cpu.pc += 1;
-            ret_addr & 0xFF
+            ret_addr
         }
         _ => panic!("Addressing mode not implemented yet"),
     }

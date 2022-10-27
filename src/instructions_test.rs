@@ -5,23 +5,243 @@ mod instruction_tests {
     use crate::MyCpu;
 
     #[test]
+    fn test_bcc() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0x90; // BCC Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.carry = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x90; // BCC Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.carry = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x800a);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x90; // BCC Relative
+        test_cpu.cpu.mem[0x8001] = 0b1111_1101; // -3
+        test_cpu.cpu.carry = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7fff);
+    }
+    #[test]
+    fn test_bcs() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0xb0; // BCS Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.carry = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0xb0; // BCS Relative
+        test_cpu.cpu.mem[0x8001] = 0x18;
+        test_cpu.cpu.carry = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x801a);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0xb0; // BCC Relative
+        test_cpu.cpu.mem[0x8001] = 0b1111_1011; // -5
+        test_cpu.cpu.carry = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7ffd);
+    }
+    #[test]
+    fn test_beq() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0xf0; // BEQ Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.zero = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0xf0; // BEQ Relative
+        test_cpu.cpu.mem[0x8001] = 0x7f;
+        test_cpu.cpu.zero = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8081);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0xf0; // BEQ Relative
+        test_cpu.cpu.mem[0x8001] = 0b1001_1100; // -100
+        test_cpu.cpu.zero = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7f9e);
+    }
+    #[test]
+    fn test_bit() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0x24; // BIT Zero Page
+        test_cpu.cpu.mem[0x8001] = 0xff;
+        test_cpu.cpu.mem[0x00ff] = 0b1100_0000;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.negative, true);
+        assert_eq!(test_cpu.cpu.overflow, true);
+
+        test_cpu.cpu.negative = false;
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x24; // BIT Zero Page
+        test_cpu.cpu.mem[0x8001] = 0x01;
+        test_cpu.cpu.mem[0x0001] = 0b1000_0000;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.negative, true);
+        assert_eq!(test_cpu.cpu.overflow, false);
+
+        test_cpu.cpu.negative = false;
+        test_cpu.cpu.overflow = false;
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x2c; // BIT Absolute
+        test_cpu.cpu.mem[0x8001] = 0xff;
+        test_cpu.cpu.mem[0x8002] = 0x01;
+        test_cpu.cpu.mem[0x01ff] = 0b0100_0000;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.negative, false);
+        assert_eq!(test_cpu.cpu.overflow, true);
+    }
+    #[test]
+    fn test_bmi() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0x30; // BMI Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.negative = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x30; // BMI Relative
+        test_cpu.cpu.mem[0x8001] = 0x7f;
+        test_cpu.cpu.negative = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8081);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x30; // BMI Relative
+        test_cpu.cpu.mem[0x8001] = 0b1001_1100; // -100
+        test_cpu.cpu.negative = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7f9e);
+    }
+    #[test]
+    fn test_bne() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0xd0; // BNE Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.zero = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0xd0; // BNE Relative
+        test_cpu.cpu.mem[0x8001] = 0x7f;
+        test_cpu.cpu.zero = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8081);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0xd0; // BNE Relative
+        test_cpu.cpu.mem[0x8001] = 0b1001_1100; // -100
+        test_cpu.cpu.zero = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7f9e);
+    }
+    #[test]
+    fn test_bpl() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0x10; // BPL Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.negative = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x10; // BPL Relative
+        test_cpu.cpu.mem[0x8001] = 0x7f;
+        test_cpu.cpu.negative = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8081);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x10; // BPL Relative
+        test_cpu.cpu.mem[0x8001] = 0b1001_1100; // -100
+        test_cpu.cpu.negative = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7f9e);
+    }
+    #[test]
+    fn test_bvc() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0x50; // BVC Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.overflow = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x50; // BVC Relative
+        test_cpu.cpu.mem[0x8001] = 0x7f;
+        test_cpu.cpu.overflow = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8081);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x50; // BVC Relative
+        test_cpu.cpu.mem[0x8001] = 0b1001_1100; // -100
+        test_cpu.cpu.overflow = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7f9e);
+    }
+    #[test]
+    fn test_bvs() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0x70; // BVS Relative
+        test_cpu.cpu.mem[0x8001] = 0x08;
+        test_cpu.cpu.overflow = false;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001); // No branch
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x70; // BVS Relative
+        test_cpu.cpu.mem[0x8001] = 0x7f;
+        test_cpu.cpu.overflow = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8081);
+
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0x70; // BVS Relative
+        test_cpu.cpu.mem[0x8001] = 0b1001_1100; // -100
+        test_cpu.cpu.overflow = true;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x7f9e);
+    }
+    #[test]
     fn test_inx() {
         let mut test_cpu = MyCpu::default();
         test_cpu.cpu.x = 5;
         test_cpu.cpu.mem[0x8000] = 0xe8; // INX Implied
         Instruction::do_instruction(&mut test_cpu, None);
         assert_eq!(test_cpu.cpu.x, 6);
+        assert!(!test_cpu.cpu.negative);
+        assert!(!test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0xff;
         test_cpu.cpu.mem[0x8000] = 0xe8; // INX Implied
         Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.x, 0);
         assert!(test_cpu.cpu.zero);
+        assert!(!test_cpu.cpu.negative);
 
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.x = 0b0111_1111;
+        test_cpu.cpu.x = 0b1001_1100;
         test_cpu.cpu.mem[0x8000] = 0xe8; // INX Implied
         Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.x, 0b1001_1101);
+        assert!(!test_cpu.cpu.zero);
         assert!(test_cpu.cpu.negative);
     }
     #[test]
@@ -31,18 +251,24 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xc8; // INY Implied
         Instruction::do_instruction(&mut test_cpu, None);
         assert_eq!(test_cpu.cpu.y, 7);
+        assert!(!test_cpu.cpu.negative);
+        assert!(!test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0xff;
         test_cpu.cpu.mem[0x8000] = 0xc8; // INY Implied
         Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.y, 0);
+        assert!(!test_cpu.cpu.negative);
         assert!(test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.y = 0b0111_1111;
+        test_cpu.cpu.y = 0b1011_1111;
         test_cpu.cpu.mem[0x8000] = 0xc8; // INY Implied
         Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.y, 0b1100_0000);
         assert!(test_cpu.cpu.negative);
+        assert!(!test_cpu.cpu.zero);
     }
 
     #[test]
@@ -50,9 +276,9 @@ mod instruction_tests {
         let mut test_cpu = MyCpu::default();
         test_cpu.cpu.mem[0x8000] = 0x4c; // JMP Absolute
         test_cpu.cpu.mem[0x8001] = 0x01;
-        test_cpu.cpu.mem[0x8002] = 0x01;
+        test_cpu.cpu.mem[0x8002] = 0x02;
         Instruction::do_instruction(&mut test_cpu, None);
-        assert_eq!(test_cpu.cpu.pc, 0x0101);
+        assert_eq!(test_cpu.cpu.pc, 0x0201);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x1100] = 0x66;
@@ -71,21 +297,27 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8001] = 0x42;
         Instruction::do_instruction(&mut test_cpu, None);
         assert_eq!(test_cpu.cpu.x, 0x42);
+        assert!(!test_cpu.cpu.negative);
+        assert!(!test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x0001] = 0x43;
+        test_cpu.cpu.mem[0x0001] = 0xff; // -1
         test_cpu.cpu.mem[0x8000] = 0xa6; // LDX Zero Page
         test_cpu.cpu.mem[0x8001] = 0x01;
         Instruction::do_instruction(&mut test_cpu, None);
-        assert_eq!(test_cpu.cpu.x, 0x43);
+        assert_eq!(test_cpu.cpu.x, 0xff);
+        assert!(test_cpu.cpu.negative);
+        assert!(!test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x2;
-        test_cpu.cpu.mem[0x0003] = 0x44;
+        test_cpu.cpu.mem[0x0003] = 0x00;
         test_cpu.cpu.mem[0x8000] = 0xb6; // LDX Zero Page Y
         test_cpu.cpu.mem[0x8001] = 0x01;
         Instruction::do_instruction(&mut test_cpu, None);
-        assert_eq!(test_cpu.cpu.x, 0x44);
+        assert_eq!(test_cpu.cpu.x, 0x00);
+        assert!(!test_cpu.cpu.negative);
+        assert!(test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x0101] = 0x45;
@@ -111,21 +343,27 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8001] = 0x42;
         Instruction::do_instruction(&mut test_cpu, None);
         assert_eq!(test_cpu.cpu.y, 0x42);
+        assert!(!test_cpu.cpu.negative);
+        assert!(!test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x0001] = 42;
+        test_cpu.cpu.mem[0x0001] = 0xfe;
         test_cpu.cpu.mem[0x8000] = 0xa4; // LDY Zero Page
         test_cpu.cpu.mem[0x8001] = 0x01;
         Instruction::do_instruction(&mut test_cpu, None);
-        assert_eq!(test_cpu.cpu.y, 42);
+        assert_eq!(test_cpu.cpu.y, 0xfe);
+        assert!(test_cpu.cpu.negative);
+        assert!(!test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x2;
-        test_cpu.cpu.mem[0x0003] = 0x44;
+        test_cpu.cpu.mem[0x0003] = 0x00;
         test_cpu.cpu.mem[0x8000] = 0xb4; // LDY Zero Page X
         test_cpu.cpu.mem[0x8001] = 0x01;
         Instruction::do_instruction(&mut test_cpu, None);
-        assert_eq!(test_cpu.cpu.y, 0x44);
+        assert_eq!(test_cpu.cpu.y, 0x00);
+        assert!(!test_cpu.cpu.negative);
+        assert!(test_cpu.cpu.zero);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x0101] = 45;
@@ -177,6 +415,29 @@ mod instruction_tests {
         Instruction::do_instruction(&mut test_cpu, None);
         assert_eq!(test_cpu.cpu.pc, 0x8001 + 1);
         assert_eq!(test_cpu.cpu.zero, true);
+    }
+    #[test]
+    fn test_rts_jsr() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.mem[0x8000] = 0x20; // JSR Absolute
+        test_cpu.cpu.mem[0x8001] = 0x01;
+        test_cpu.cpu.mem[0x8002] = 0x02;
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x0201);
+        assert_eq!(test_cpu.cpu.mem[(test_cpu.cpu.sp + 2) as usize], 0x02);
+        assert_eq!(test_cpu.cpu.mem[(test_cpu.cpu.sp + 1) as usize], 0x80);
+
+        test_cpu.cpu.mem[0x0201] = 0x60; // RTS Implied
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8003);
+    }
+    #[test]
+    fn test_nop() {
+        let mut test_cpu = MyCpu::default();
+        test_cpu.cpu.pc = 0x8000;
+        test_cpu.cpu.mem[0x8000] = 0xea; // NOP Implied
+        Instruction::do_instruction(&mut test_cpu, None);
+        assert_eq!(test_cpu.cpu.pc, 0x8001);
     }
     #[test]
     fn test_stx() {

@@ -58,8 +58,8 @@ impl Cpu for MyCpu {
             self.cpu.stack_push(((self.cpu.pc >> 8) & 0xff) as u8);
             self.cpu.stack_push(p);
             self.cpu.irq_dis = true;
-            self.cpu.pc = (self.data_read(None, 0xFFFA) as u16)
-                & ((self.data_read(None, 0xFFFB) as u16) << 8);
+            self.cpu.pc = (self.data_read(&None, 0xFFFA) as u16)
+                & ((self.data_read(&None, 0xFFFB) as u16) << 8);
         }
     }
 }
