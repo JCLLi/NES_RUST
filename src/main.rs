@@ -70,7 +70,7 @@ impl Cpu for MyCpu {
 impl TestableCpu for MyCpu {
     fn get_cpu(rom: &[u8]) -> Result<Self, Box<dyn Error>> {
         Ok(MyCpu {
-            cpu: Cpu6502::new(rom),
+            cpu: Cpu6502::generate_from_rom(rom),
             cartridge: Cartridge::generate_from_rom(rom),
             cycle: 0,
         })

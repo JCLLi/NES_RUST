@@ -20,7 +20,7 @@ pub struct Cpu6502 {
 }
 
 impl Cpu6502 {
-    pub fn new(rom: &[u8]) -> Cpu6502 {
+    pub fn generate_from_rom(rom: &[u8]) -> Cpu6502 {
         // TODO this only works for NROM! Make some mapper init function.
         let train_avail = (rom[6] & 0b100) == 0b100;
         let data_offset: usize = if train_avail { 16 + 512 } else { 16 }; //Start of prg_rom
@@ -30,11 +30,22 @@ impl Cpu6502 {
             rom_data[i] = rom[i + data_offset - 0x8000];
         }
 
+        if train_avail {
+            for i in 0x7000..=0x71ff {
+                rom_data[i] = rom[i - 0x7000 + 16];
+            }
+        }
+        let reset_offset = if rom[4] == 1 { 16384 } else { 0 };
+        let mut pc = ((rom_data[0xfffd - reset_offset] as u16) << 8)
+            | rom_data[0xfffc - reset_offset] as u16; // Reset vector
+        if pc >= 0xc000 && rom[4] == 1 {
+            pc -= 16384;
+        }
         Cpu6502 {
             a: 0,
             x: 0,
             y: 0,
-            pc: 0x8000,
+            pc,
             sp: 0x01FF,
 
             carry: false,
@@ -122,21 +133,22 @@ mod cpu_tests {
         for i in 0..16 {
             rom[i] = header_rom[i];
         }
-        let mut prg_data: Vec<u8> = Vec::new();
-        let mut chr_data: Vec<u8> = Vec::new();
         // Fill cartridge and rom with same data
-        for i in 0..16384 * (prg_rom_size_in_16kb as u16) {
+        for i in 0..16384 * (prg_rom_size_in_16kb as u16) - 4 {
             let test_data = (i % 8).try_into().unwrap();
-            prg_data.push(test_data);
             rom[(16 + i) as usize] = test_data;
         }
+        // Reset vector
+        rom[(16 + 16380) as usize] = 0x00;
+        rom[(16 + 16381) as usize] = 0x80;
+        // IRQ vector
+        rom[(16382 + 16) as usize] = 0x80;
+        rom[(16383 + 16) as usize] = 0x80;
         for i in 0..8192 * (chr_rom_size_in_8kb as u16) {
             let test_data = (i % 8).try_into().unwrap();
-            chr_data.push(test_data);
             rom[(16 + 16384 * (prg_rom_size_in_16kb as u16) + i) as usize] = test_data;
         }
 
-        // TODO this only works for NROM! Make some mapper init function.
         let train_avail = (rom[6] & 0b100) == 0b100;
         let data_offset: usize = if train_avail { 16 + 512 } else { 16 }; //Start of prg_rom
         let mut rom_data: [u8; 0xffff] = [0; 0xffff];
@@ -144,8 +156,9 @@ mod cpu_tests {
         for i in 0x8000..end {
             rom_data[i] = rom[i + data_offset - 0x8000];
         }
+
         assert_eq!(
-            Cpu6502::new(&rom),
+            Cpu6502::generate_from_rom(&rom),
             Cpu6502 {
                 a: 0,
                 x: 0,
