@@ -1255,12 +1255,18 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
             ret_addr
         }
         AddressingMode::IndirectX => {
-            let ret_addr: u16 = cpu.mem[(cpu.mem[(cpu.pc + 1) as usize] + cpu.x) as usize] as u16;
+            let ret_addr_low: u16 =
+                cpu.mem[(cpu.mem[(cpu.pc + 1) as usize].wrapping_add(cpu.x)) as usize] as u16;
+            let ret_addr_high: u16 =
+                cpu.mem[(cpu.mem[(cpu.pc + 1) as usize].wrapping_add(cpu.x + 1)) as usize] as u16;
+            let ret_addr = (ret_addr_high << 8) | ret_addr_low;
             cpu.pc += 1;
-            ret_addr & 0xFF
+            ret_addr
         }
         AddressingMode::IndirectY => {
-            let ret_addr: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize] + cpu.y) as u16;
+            let ret_addr_low: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize]) as u16;
+            let ret_addr_high: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize + 1]) as u16;
+            let ret_addr = ((ret_addr_high << 8) | ret_addr_low) + cpu.y as u16;
             cpu.pc += 1;
             ret_addr
         }
