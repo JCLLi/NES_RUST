@@ -5,7 +5,7 @@ impl MyCpu {
     pub fn data_write(&mut self, _ppu: Option<&mut Ppu>, addr: u16, data: u8) {
         if addr >= 0x8000 {
             self.mapper
-                .write_mapper( addr, data, &mut self.cpu.mem, &mut self.cartridge);
+                .write_mapper(addr, data, &mut self.cpu.mem, &mut self.cartridge);
         } else {
             self.cpu.mem[addr as usize] = data;
         }
