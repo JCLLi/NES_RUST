@@ -77,7 +77,11 @@ impl TestableCpu for MyCpu {
     }
 
     fn set_program_counter(&mut self, value: u16) {
-        self.cpu.pc = value;
+        if self.cartridge.prg_rom_size_in_16kb == 1 && value >= 0xc000 {
+            self.cpu.pc = value - 0x4000;
+        } else {
+            self.cpu.pc = value;
+        }
     }
 
     fn memory_read(&self, address: u16) -> u8 {
