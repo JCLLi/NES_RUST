@@ -292,6 +292,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            counter: 0,
         };
         mycpu
             .mapper
@@ -427,6 +428,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            counter: 0,
         };
         mycpu
             .mapper
@@ -562,6 +564,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            counter: 0,
         };
         mycpu
             .mapper
@@ -697,6 +700,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            counter: 0,
         };
         mycpu
             .mapper

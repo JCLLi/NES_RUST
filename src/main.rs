@@ -21,6 +21,7 @@ pub struct MyCpu {
     cartridge: Cartridge,
     cycle: u8, // Cycles of instruction
     mapper: MapperType,
+    counter: u32,
 }
 
 /// See docs of `Cpu` for explanations of each function
@@ -77,6 +78,7 @@ impl TestableCpu for MyCpu {
             cartridge: Cartridge::generate_from_rom(rom),
             cycle: 0,
             mapper: MapperType::get_mapper(cartridge.mapper_number, cartridge),
+            counter: 0,
         })
     }
 
@@ -142,6 +144,7 @@ impl TestableCpu for MyCpu {
             },
             cycle: 0,
             mapper: MapperType::get_mapper(self.cartridge.mapper_number, cartridge),
+            counter: 0
         };
         cpu.data_read(&mut dummy_ppu, address)
     }
@@ -167,7 +170,7 @@ mod tests {
     fn test_all() {
         env_logger::builder().filter_level(LevelFilter::Info).init();
 
-        if let Err(e) = run_tests::<MyCpu>(TestSelector::NROM_TEST) {
+        if let Err(e) = run_tests::<MyCpu>(TestSelector::OFFICIAL_INSTRS) {
             log::error!("TEST FAILED: {e}");
             assert!(false);
         }

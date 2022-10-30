@@ -904,11 +904,22 @@ impl Instruction {
         }
     }
     pub fn do_instruction(mycpu: &mut MyCpu, ppu: &mut Ppu) {
+        mycpu.counter += 1;
         let opcode: u8 = mycpu.cpu.mem[mycpu.cpu.pc as usize];
+
+        if mycpu.counter >= 2015000 && mycpu.counter <= 2015500{
+            println!("opcode {:#0x} ", opcode);
+            //println!("carry: {}, zero: {}, irq_dis: {}, dec: {}, brk: {}, over: {}, neg: {}",
+                     //mycpu.cpu.carry, mycpu.cpu.zero, mycpu.cpu.irq_dis, mycpu.cpu.dec, mycpu.cpu.b, mycpu.cpu.overflow, mycpu.cpu.negative);
+        }
+        if opcode == 0xff {
+            println!("counter: 0xff {:#0x}", mycpu.cpu.pc);
+        }
 
         let instr = Instruction::get_instruction(opcode);
         mycpu.cycle = instr.cycle;
         //println!("Opcode: {:#0x}", opcode); // TODO remove this (or replace with debug)
+
         match instr.instruction_name {
             InstructionName::ADC => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
