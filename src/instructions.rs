@@ -1,5 +1,4 @@
 use crate::instructions::AddressingMode::Accumulator;
-use crate::mapper::get_mapped_address;
 use crate::Cpu6502;
 use crate::MyCpu;
 use tudelft_nes_ppu::{Mirroring, Ppu};
@@ -1426,13 +1425,9 @@ impl Instruction {
 
 pub fn get_jump_addr(mycpu: &mut MyCpu, addr: u16) -> u16 {
     if addr >= 0x8000 {
-        get_mapped_address(
-            mycpu.cartridge.mapper_number,
-            addr,
-            mycpu.cartridge.prg_rom_size_in_16kb,
-        )
+        mycpu.mapper.get_mapper_address(addr)
     } else {
-        addr
+        panic!("Jumped outside of prg rom") // TODO determine if you maybe can jump outside
     }
 }
 
