@@ -8,8 +8,8 @@ mod mycpu;
 use crate::cartridge::Cartridge;
 use crate::cpu::Cpu6502;
 use instructions::Instruction;
+use mapper::MapperType;
 
-use crate::mapper::get_mapped_address;
 use log::LevelFilter;
 use std::error::Error;
 use tudelft_nes_ppu::{run_cpu, Cpu, Mirroring, Ppu};
@@ -20,6 +20,7 @@ pub struct MyCpu {
     cpu: Cpu6502,
     cartridge: Cartridge,
     cycle: u8, // Cycles of instruction
+    mapper: MapperType,
 }
 
 /// See docs of `Cpu` for explanations of each function
@@ -70,10 +71,12 @@ impl Cpu for MyCpu {
 /// tests to find bugs in your cpu.
 impl TestableCpu for MyCpu {
     fn get_cpu(rom: &[u8]) -> Result<Self, Box<dyn Error>> {
+        let cartridge = Cartridge::generate_from_rom(rom);
         Ok(MyCpu {
             cpu: Cpu6502::generate_from_rom(rom),
             cartridge: Cartridge::generate_from_rom(rom),
             cycle: 0,
+            mapper: MapperType::get_mapper(cartridge.mapper_number, cartridge),
         })
     }
 
@@ -89,12 +92,34 @@ impl TestableCpu for MyCpu {
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         let mut prg_data: Vec<u8> = Vec::new();
         let mut chr_data: Vec<u8> = Vec::new();
+        let mut prg_data2: Vec<u8> = Vec::new();
+        let mut chr_data2: Vec<u8> = Vec::new();
         for i in 0..self.cartridge.prg_rom_data.len() {
             prg_data.push(self.cartridge.prg_rom_data[i]);
+            prg_data2.push(self.cartridge.prg_rom_data[i]);
         }
         for i in 0..self.cartridge.chr_rom_data.len() {
             chr_data.push(self.cartridge.chr_rom_data[i]);
+            chr_data2.push(self.cartridge.chr_rom_data[i]);
         }
+        let cartridge = Cartridge {
+            prg_rom_size_in_16kb: self.cartridge.prg_rom_size_in_16kb,
+            chr_rom_size_in_8kb: self.cartridge.chr_rom_size_in_8kb,
+            mapper_number: self.cartridge.mapper_number,
+            mirroring_control: self.cartridge.mirroring_control,
+            trainer_available: self.cartridge.trainer_available,
+            battery_backed_prg_ram_available: self.cartridge.battery_backed_prg_ram_available,
+            mirroring_mode: self.cartridge.mirroring_mode,
+            nes_2_0_format: self.cartridge.nes_2_0_format,
+            playchoice_10: self.cartridge.playchoice_10,
+            vs_unisystem: self.cartridge.vs_unisystem,
+            prg_ram_size_in_8kb: self.cartridge.prg_ram_size_in_8kb,
+            tv_system_mode: self.cartridge.tv_system_mode,
+            prg_ram_present: self.cartridge.prg_ram_present,
+            bus_conflicts: self.cartridge.bus_conflicts,
+            prg_rom_data: prg_data2,
+            chr_rom_data: chr_data2,
+        };
         let mut cpu: MyCpu = MyCpu {
             cpu: self.cpu,
             cartridge: Cartridge {
@@ -116,6 +141,7 @@ impl TestableCpu for MyCpu {
                 chr_rom_data: chr_data,
             },
             cycle: 0,
+            mapper: MapperType::get_mapper(self.cartridge.mapper_number, cartridge),
         };
         cpu.data_read(&mut dummy_ppu, address)
     }

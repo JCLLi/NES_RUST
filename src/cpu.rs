@@ -16,7 +16,7 @@ pub struct Cpu6502 {
     pub overflow: bool,
     pub negative: bool,
 
-    pub mem: [u8; 0xffff],
+    pub mem: [u8; 0xffff + 1],
 }
 
 impl Cpu6502 {
@@ -24,9 +24,9 @@ impl Cpu6502 {
         // TODO this only works for NROM! Make some mapper init function.
         let train_avail = (rom[6] & 0b100) == 0b100;
         let data_offset: usize = if train_avail { 16 + 512 } else { 16 }; //Start of prg_rom
-        let mut rom_data: [u8; 0xffff] = [0; 0xffff];
+        let mut rom_data: [u8; 0xffff + 1] = [0; 0xffff + 1];
         let end = if rom[4] == 1 { 0xBFFF } else { 0xFFFF };
-        for i in 0x8000..end {
+        for i in 0x8000..=end {
             rom_data[i] = rom[i + data_offset - 0x8000];
         }
 
@@ -92,7 +92,7 @@ impl Default for Cpu6502 {
             overflow: false,
             negative: false,
 
-            mem: [0; 0xffff],
+            mem: [0; 0xffff + 1],
         }
     }
 }
@@ -151,9 +151,9 @@ mod cpu_tests {
 
         let train_avail = (rom[6] & 0b100) == 0b100;
         let data_offset: usize = if train_avail { 16 + 512 } else { 16 }; //Start of prg_rom
-        let mut rom_data: [u8; 0xffff] = [0; 0xffff];
+        let mut rom_data: [u8; 0xffff + 1] = [0; 0xffff + 1];
         let end = if rom[4] == 1 { 0xBFFF } else { 0xFFFF };
-        for i in 0x8000..end {
+        for i in 0x8000..=end {
             rom_data[i] = rom[i + data_offset - 0x8000];
         }
 

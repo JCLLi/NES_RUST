@@ -1,10 +1,11 @@
-use crate::{get_mapped_address, MyCpu};
+use crate::MyCpu;
 use tudelft_nes_ppu::{Ppu, PpuRegister};
 
 impl MyCpu {
     pub fn data_write(&mut self, ppu: &mut Ppu, addr: u16, data: u8) {
         if addr >= 0x8000 {
-            // TODO NROM does not have a write option but other do so add that here
+            self.mapper
+                .write_mapper(addr, data, &mut self.cpu.mem, &mut self.cartridge);
         } else if (0x2000..=0x2007).contains(&addr) {
             //ppu register
             match addr {
@@ -49,11 +50,7 @@ impl MyCpu {
 
     pub fn data_read(&mut self, ppu: &mut Ppu, addr: u16) -> u8 {
         if addr >= 0x8000 {
-            self.cpu.mem[get_mapped_address(
-                self.cartridge.mapper_number,
-                addr,
-                self.cartridge.prg_rom_size_in_16kb,
-            ) as usize]
+            self.cpu.mem[self.mapper.get_mapper_address(addr) as usize]
         } else if (0x2000..=0x2007).contains(&addr) {
             //ppu register
             match addr {
