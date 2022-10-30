@@ -329,7 +329,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
                 chr_rom_bank_mode: _,
@@ -358,7 +358,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0xe000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
                 chr_rom_bank_mode: _,
@@ -464,7 +464,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
                 chr_rom_bank_mode,
@@ -494,7 +494,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
                 chr_rom_bank_mode: _,
@@ -599,7 +599,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
                 chr_rom_bank_mode,
@@ -629,7 +629,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
                 chr_rom_bank_mode: _,
@@ -734,7 +734,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0x8000, 0b0111, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
                 chr_rom_bank_mode,
@@ -764,7 +764,7 @@ mod mapper_tests {
             .mapper
             .write_mapper(0x8000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
         match mycpu.mapper {
-            MapperType::MMC1 {
+            MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
                 chr_rom_bank_mode,
