@@ -30,7 +30,7 @@ impl Cpu for MyCpu {
             return Ok(());
         }
 
-        Instruction::do_instruction(self, Some(ppu));
+        Instruction::do_instruction(self, ppu);
         self.cycle -= 1;
         Result::Ok(())
     }
@@ -40,6 +40,7 @@ impl Cpu for MyCpu {
     }
 
     fn non_maskable_interrupt(&mut self) {
+        let mut dummy_ppu = Ppu::new(Mirroring::Horizontal); // Not used as nmi vector never in ppu range
         if !self.cpu.irq_dis {
             if self.cycle != 0 {
                 self.cycle = 0;
@@ -58,8 +59,8 @@ impl Cpu for MyCpu {
             self.cpu.stack_push(((self.cpu.pc >> 8) & 0xff) as u8);
             self.cpu.stack_push(p);
             self.cpu.irq_dis = true;
-            self.cpu.pc = (self.data_read(&None, 0xFFFA) as u16)
-                & ((self.data_read(&None, 0xFFFB) as u16) << 8);
+            self.cpu.pc = (self.data_read(&mut dummy_ppu, 0xFFFA) as u16)
+                & ((self.data_read(&mut dummy_ppu, 0xFFFB) as u16) << 8);
         }
     }
 }
@@ -85,6 +86,7 @@ impl TestableCpu for MyCpu {
     }
 
     fn memory_read(&self, address: u16) -> u8 {
+        let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         let mut prg_data: Vec<u8> = Vec::new();
         let mut chr_data: Vec<u8> = Vec::new();
         for i in 0..self.cartridge.prg_rom_data.len() {
@@ -115,7 +117,7 @@ impl TestableCpu for MyCpu {
             },
             cycle: 0,
         };
-        cpu.data_read(&None, address)
+        cpu.data_read(&mut dummy_ppu, address)
     }
 }
 
