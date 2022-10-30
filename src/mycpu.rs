@@ -21,4 +21,15 @@ impl MyCpu {
             self.cpu.mem[addr as usize]
         }
     }
+    pub fn data_read_borrow(&mut self, _ppu: &Option<&mut Ppu>, addr: &u16) -> u8 {
+        if *addr >= 0x8000 {
+            self.cpu.mem[get_mapped_address(
+                self.cartridge.mapper_number,
+                *addr,
+                self.cartridge.prg_rom_size_in_16kb,
+            ) as usize]
+        } else {
+            self.cpu.mem[*addr as usize]
+        }
+    }
 }
