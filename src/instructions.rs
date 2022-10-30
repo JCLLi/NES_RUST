@@ -2,6 +2,7 @@ use crate::instructions::AddressingMode::Accumulator;
 use crate::Cpu6502;
 use crate::MyCpu;
 use tudelft_nes_ppu::{Mirroring, Ppu};
+
 #[allow(clippy::upper_case_acronyms)] // 6502 uses upper case acronyms so we do too
 pub enum InstructionName {
     ADC,
@@ -904,9 +905,10 @@ impl Instruction {
     }
     pub fn do_instruction(mycpu: &mut MyCpu, ppu: &mut Ppu) {
         let opcode: u8 = mycpu.cpu.mem[mycpu.cpu.pc as usize];
+
         let instr = Instruction::get_instruction(opcode);
         mycpu.cycle = instr.cycle;
-        println!("Opcode: {:#0x}", opcode); // TODO remove this (or replace with debug)
+        //println!("Opcode: {:#0x}", opcode); // TODO remove this (or replace with debug)
         match instr.instruction_name {
             InstructionName::ADC => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
@@ -929,7 +931,7 @@ impl Instruction {
                 mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
                 mycpu.cpu.zero = mycpu.cpu.a == 0;
 
-                mycpu.cpu.carry = (res & 0b1_0000_0000) == 0b1_0000_0000;
+                mycpu.cpu.carry = res > 0xff;
 
                 mycpu.cpu.overflow = both_operands_are_positive && res > 0b0111_1111
                     || both_operands_are_negative && res < 0b1000_0000
@@ -1035,7 +1037,7 @@ impl Instruction {
                     0b0010_0000 | //ignore_flag
                     (mycpu.cpu.overflow as u8) << 6 |
                     (mycpu.cpu.negative as u8) << 7;
-                mycpu.cpu.pc += 1;
+                mycpu.cpu.pc += 2;
                 mycpu.cpu.stack_push((mycpu.cpu.pc & 0xff) as u8);
                 mycpu.cpu.stack_push(((mycpu.cpu.pc >> 8) & 0xff) as u8);
                 mycpu.cpu.stack_push(p);
@@ -1087,7 +1089,6 @@ impl Instruction {
                 }
             }
             InstructionName::CPX => {
-                println!("CPX");
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
                 let memory = mycpu.data_read(ppu, addr);
                 if mycpu.cpu.x >= memory {
@@ -1346,31 +1347,21 @@ impl Instruction {
             }
             InstructionName::SBC => {
                 let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode);
-                let m = mycpu.data_read(ppu, addr) as u16;
+                let m = mycpu.data_read(ppu, addr);
 
-                // needed for overflow flag
                 let a_is_positive = mycpu.cpu.a < 0b1000_0000;
                 let m_is_positive = m < 0b1000_0000;
                 let a_positive_and_m_negative = a_is_positive && !m_is_positive;
                 let a_negative_and_m_positive = !a_is_positive && m_is_positive;
 
-                // operation
-                let res: u16;
-                if mycpu.cpu.a >= m as u8 {
-                    res = (mycpu.cpu.a as u16) - m;
-                    mycpu.cpu.carry = false;
-                } else {
-                    res = 0x100 + (mycpu.cpu.a as u16) - m;
-                    mycpu.cpu.carry = true;
-                }
-                mycpu.cpu.a = (res & 0x00FF) as u8;
-
-                //flags
-                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
-                mycpu.cpu.zero = mycpu.cpu.a == 0;
-                /* carry flag has already been determined in previous codeblock */
-                mycpu.cpu.overflow = a_positive_and_m_negative && res > 0b0111_1111
-                    || a_negative_and_m_positive && res < 0b1000_0000;
+                let temp = mycpu.cpu.a.wrapping_sub(m) as u16;
+                let res = temp.wrapping_sub(if mycpu.cpu.carry { 0 } else { 1 }) as u16;
+                mycpu.cpu.carry = res & 0xff00 == 0;
+                mycpu.cpu.zero = res == 0;
+                mycpu.cpu.negative = (res & 0b1000_0000) == 0b1000_0000;
+                mycpu.cpu.overflow = (a_positive_and_m_negative && res > 0b0111_1111)
+                    || (a_negative_and_m_positive && res < 0b1000_0000);
+                mycpu.cpu.a = (res & 0xff) as u8;
             }
             InstructionName::SEC => {
                 mycpu.cpu.carry = true;
@@ -1427,7 +1418,8 @@ pub fn get_jump_addr(mycpu: &mut MyCpu, addr: u16) -> u16 {
     if addr >= 0x8000 {
         mycpu.mapper.get_mapper_address(addr)
     } else {
-        panic!("Jumped outside of prg rom") // TODO determine if you maybe can jump outside
+        //panic!("Jumped outside of prg rom") // TODO determine if you maybe can jump outside
+        addr
     }
 }
 
@@ -1452,14 +1444,14 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
         }
         AddressingMode::AbsoluteX => {
             let ret_addr: u16 = (((cpu.mem[(cpu.pc + 2) as usize]) as u16) << 8
-                | (cpu.mem[(cpu.pc + 1) as usize] + cpu.x) as u16)
+                | (cpu.mem[(cpu.pc + 1) as usize].wrapping_add(cpu.x)) as u16)
                 as u16;
             cpu.pc += 2;
             ret_addr
         }
         AddressingMode::AbsoluteY => {
             let ret_addr: u16 = (((cpu.mem[(cpu.pc + 2) as usize]) as u16) << 8
-                | (cpu.mem[(cpu.pc + 1) as usize] + cpu.y) as u16)
+                | (cpu.mem[(cpu.pc + 1) as usize].wrapping_add(cpu.y)) as u16)
                 as u16;
             cpu.pc += 2;
             ret_addr
@@ -1470,7 +1462,7 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
         }
         AddressingMode::ZeroPageX => {
             cpu.pc += 1;
-            (cpu.mem[cpu.pc as usize] + cpu.x) as u16 & 0xFF
+            (cpu.mem[cpu.pc as usize].wrapping_add(cpu.x)) as u16 & 0xFF
         }
         AddressingMode::ZeroPageY => {
             cpu.pc += 1;
@@ -1490,8 +1482,8 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
         AddressingMode::Indirect => {
             let pl_addr: u16 = (cpu.mem[(cpu.pc + 2) as usize] as u16) << 8
                 | cpu.mem[(cpu.pc + 1) as usize] as u16;
-            let ret_addr: u16 = ((cpu.mem[pl_addr as usize] as u16) << 8)
-                | (cpu.mem[((pl_addr + 1) as usize)] as u16);
+            let ret_addr: u16 = (cpu.mem[pl_addr as usize] as u16)
+                | ((cpu.mem[((pl_addr + 1) as usize)] as u16) << 8);
             cpu.pc += 1;
             ret_addr
         }
@@ -1507,7 +1499,7 @@ pub fn get_data_address(cpu: &mut Cpu6502, address_mode: AddressingMode) -> u16 
         AddressingMode::IndirectY => {
             let ret_addr_low: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize]) as u16;
             let ret_addr_high: u16 = (cpu.mem[cpu.mem[(cpu.pc + 1) as usize] as usize + 1]) as u16;
-            let ret_addr = ((ret_addr_high << 8) | ret_addr_low) + cpu.y as u16;
+            let ret_addr = ((ret_addr_high << 8) | ret_addr_low).wrapping_add(cpu.y as u16);
             cpu.pc += 1;
             ret_addr
         }

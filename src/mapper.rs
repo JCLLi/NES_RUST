@@ -74,7 +74,7 @@ impl MapperType {
         &mut self,
         addr: u16,
         data: u8,
-        mem: &mut [u8; 0xffff],
+        mem: &mut [u8; 0xffff + 1],
         cart: &mut Cartridge,
     ) {
         //You can't write to read-only memory
@@ -125,7 +125,8 @@ impl MapperType {
                     *amount_shifted = 0;
                     if prg_bank_changed {
                         //for i in 0x8000..0xffff {
-                        for (i, mem_ref) in mem.iter_mut().enumerate().take(0xffff).skip(0x8000) {
+                        for (i, mem_ref) in mem.iter_mut().enumerate().take(0xffff + 1).skip(0x8000)
+                        {
                             if *prg_rom_bank_mode == 0 {
                                 if i < 0xc000 {
                                     *mem_ref = cart.prg_rom_data[(i - 0x8000
@@ -144,13 +145,23 @@ impl MapperType {
                                     *mem_ref = cart.prg_rom_data
                                         [(i - 0x8000 + 16384 * *prg_bank as usize) as usize];
                                 }
-                            } else if i < 0xc000 {
-                                *mem_ref = cart.prg_rom_data
-                                    [(i - 0x8000 + 16384 * *prg_bank as usize) as usize];
+                            } else if *prg_rom_bank_mode == 2 {
+                                if i < 0xc000 {
+                                    *mem_ref = cart.prg_rom_data[(i - 0x8000) as usize];
+                                } else {
+                                    *mem_ref = cart.prg_rom_data
+                                        [(i - 0xc000 + 16384 * *prg_bank as usize) as usize];
+                                }
+                            } else if *prg_rom_bank_mode == 3 {
+                                if i >= 0xc000 {
+                                    *mem_ref = cart.prg_rom_data
+                                        [cart.prg_rom_data.len() - 16834 + (i - 0xc000)];
+                                } else {
+                                    *mem_ref = cart.prg_rom_data
+                                        [(i - 0x8000 + 16384 * *prg_bank as usize) as usize];
+                                }
                             } else {
-                                *mem_ref = cart.prg_rom_data
-                                    [cart.prg_rom_data.len() - 16834 + (i - 0xc000)];
-                                // Set to last PRG bank
+                                panic!("Prg rom bank mode wrong")
                             }
                         }
                     }
@@ -205,8 +216,8 @@ mod mapper_tests {
 
     #[test]
     fn test_mmc1_write_prg() {
-        let mut rom_data: [u8; 0xffff] = [0; 0xffff];
-        for i in 0x8000..0xffff {
+        let mut rom_data: [u8; 0xffff + 1] = [0; 0xffff + 1];
+        for i in 0x8000..=0xffff {
             rom_data[i] = (i - 0x8000) as u8;
         }
 
@@ -340,8 +351,8 @@ mod mapper_tests {
     }
     #[test]
     fn test_mmc1_write_chr_bank1() {
-        let mut rom_data: [u8; 0xffff] = [0; 0xffff];
-        for i in 0x8000..0xffff {
+        let mut rom_data: [u8; 0xffff + 1] = [0; 0xffff + 1];
+        for i in 0x8000..=0xffff {
             rom_data[i] = (i - 0x8000) as u8;
         }
 
@@ -475,8 +486,8 @@ mod mapper_tests {
     }
     #[test]
     fn test_mmc1_write_chr_bank0() {
-        let mut rom_data: [u8; 0xffff] = [0; 0xffff];
-        for i in 0x8000..0xffff {
+        let mut rom_data: [u8; 0xffff + 1] = [0; 0xffff + 1];
+        for i in 0x8000..=0xffff {
             rom_data[i] = (i - 0x8000) as u8;
         }
 
@@ -610,8 +621,8 @@ mod mapper_tests {
     }
     #[test]
     fn test_mmc1_write_control() {
-        let mut rom_data: [u8; 0xffff] = [0; 0xffff];
-        for i in 0x8000..0xffff {
+        let mut rom_data: [u8; 0xffff + 1] = [0; 0xffff + 1];
+        for i in 0x8000..=0xffff {
             rom_data[i] = (i - 0x8000) as u8;
         }
 
