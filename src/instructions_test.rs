@@ -491,14 +491,14 @@ mod instruction_tests {
         test_cpu.cpu.mem[test_cpu.mapper.get_mapper_address(0xffff) as usize] = 0x07; // Set IRQ vector
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.pc, test_cpu.mapper.get_mapper_address(0x0766),);
-        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 3], 0x02);
-        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 2], 0x80);
-        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 1], 0x22); // NOTE 6th bit is alwasy set to 1
+        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 3], 0x80);
+        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 2], 0x02);
+        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize + 1], 0x32); // NOTE b flag is alwasy set to 0b11
 
         test_cpu.cpu.mem[0x0766] = 0x40; // RTI Implied
         test_cpu.cpu.zero = false; // Set a status flag
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.pc, 0x8001 + 2);
+        assert_eq!(test_cpu.cpu.pc, 0x8001 + 1);
         assert_eq!(test_cpu.cpu.zero, true);
     }
     #[test]
@@ -510,8 +510,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8002] = 0x90;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.pc, 0x9001);
-        assert_eq!(test_cpu.cpu.mem[(test_cpu.cpu.sp + 2) as usize], 0x02);
-        assert_eq!(test_cpu.cpu.mem[(test_cpu.cpu.sp + 1) as usize], 0x80);
+        assert_eq!(test_cpu.cpu.mem[(test_cpu.cpu.sp + 2) as usize], 0x80);
+        assert_eq!(test_cpu.cpu.mem[(test_cpu.cpu.sp + 1) as usize], 0x02);
 
         test_cpu.cpu.mem[0x9001] = 0x60; // RTS Implied
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
@@ -1475,7 +1475,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.zero, true);
         assert_eq!(test_cpu.cpu.irq_dis, true);
         assert_eq!(test_cpu.cpu.dec, true);
-        assert_eq!(test_cpu.cpu.b, true);
+        assert_eq!(test_cpu.cpu.b, false);
         assert_eq!(test_cpu.cpu.overflow, true);
         assert_eq!(test_cpu.cpu.negative, true);
         assert_eq!(test_cpu.cpu.carry, true);
@@ -1525,7 +1525,7 @@ mod instruction_tests {
         let mut test_cpu = MyCpu::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[test_cpu.cpu.sp as usize] = 0x80;
+        test_cpu.cpu.sp = 0x180;
         test_cpu.cpu.mem[0x8000] = 0xba; // TSX Implied
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.x, 0x80); //test transfer
@@ -1535,7 +1535,7 @@ mod instruction_tests {
         let mut test_cpu = MyCpu::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[test_cpu.cpu.sp as usize] = 0x00;
+        test_cpu.cpu.sp = 0x100;
         test_cpu.cpu.mem[0x8000] = 0xba; // TSX Implied
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.x, 0x00); //test transfer
@@ -1569,7 +1569,7 @@ mod instruction_tests {
         test_cpu.cpu.x = 0x80;
         test_cpu.cpu.mem[0x8000] = 0x9a; // TXS Implied
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[test_cpu.cpu.sp as usize], 0x80); //test transfer
+        assert_eq!(test_cpu.cpu.sp, 0x180);
     }
     #[test]
     fn test_tya() {
@@ -2676,8 +2676,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0x6A; // ROR accumulator
         test_cpu.cpu.a = 0b0001_1101;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.a, 0b1000_1110);
-        assert_eq!(test_cpu.cpu.negative, true);
+        assert_eq!(test_cpu.cpu.a, 0b0000_1110);
+        assert_eq!(test_cpu.cpu.negative, false);
         assert_eq!(test_cpu.cpu.zero, false);
         assert_eq!(test_cpu.cpu.carry, true);
 
@@ -2688,8 +2688,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0x6A; // ROR Accumulator
         test_cpu.cpu.a = 0b1111_1111;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.a, 0b1111_1111);
-        assert_eq!(test_cpu.cpu.negative, true);
+        assert_eq!(test_cpu.cpu.a, 0b0111_1111);
+        assert_eq!(test_cpu.cpu.negative, false);
         assert_eq!(test_cpu.cpu.zero, false);
         assert_eq!(test_cpu.cpu.carry, true);
 
@@ -2723,28 +2723,28 @@ mod instruction_tests {
         //  0b00111010
         // = 0b0111_010(0) -> N -> 0, Z -> 0, C -> 0
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.carry = false;
+        test_cpu.cpu.carry = true;
         test_cpu.cpu.mem[0x8000] = 0x76; // ROR zeropageX
         test_cpu.cpu.mem[0x8001] = 0x0066;
         test_cpu.cpu.x = 3;
         test_cpu.cpu.mem[0x0069] = 0b0011_1010;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x0069], 0b0001_1101);
-        assert_eq!(test_cpu.cpu.negative, false);
+        assert_eq!(test_cpu.cpu.mem[0x0069], 0b1001_1101);
+        assert_eq!(test_cpu.cpu.negative, true);
         assert_eq!(test_cpu.cpu.zero, false);
         assert_eq!(test_cpu.cpu.carry, false);
 
         //  0b00111010
         // = 0b0111_010(0) -> N -> 0, Z -> 0, C -> 0
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.carry = false;
+        test_cpu.cpu.carry = true;
         test_cpu.cpu.mem[0x8000] = 0x6E; // ROR absolute
         test_cpu.cpu.mem[0x8001] = 0x60;
         test_cpu.cpu.mem[0x8002] = 0x52;
-        test_cpu.cpu.mem[0x5260] = 0b0011_1010;
+        test_cpu.cpu.mem[0x5260] = 0b1011_1010;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x5260], 0b0001_1101);
-        assert_eq!(test_cpu.cpu.negative, false);
+        assert_eq!(test_cpu.cpu.mem[0x5260], 0b1101_1101);
+        assert_eq!(test_cpu.cpu.negative, true);
         assert_eq!(test_cpu.cpu.zero, false);
         assert_eq!(test_cpu.cpu.carry, false);
 
@@ -2788,7 +2788,7 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0x2A; // ROL Accumulator
         test_cpu.cpu.a = 0b1111_1111;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.a, 0b1111_1111);
+        assert_eq!(test_cpu.cpu.a, 0b1111_1110);
         assert_eq!(test_cpu.cpu.negative, true);
         assert_eq!(test_cpu.cpu.zero, false);
         assert_eq!(test_cpu.cpu.carry, true);
@@ -2810,12 +2810,12 @@ mod instruction_tests {
         //  0b00111010
         // = 0b0111_010(0) -> N -> 0, Z -> 0, C -> 0
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.carry = false;
+        test_cpu.cpu.carry = true;
         test_cpu.cpu.mem[0x8000] = 0x26; // ROL zeropage
         test_cpu.cpu.mem[0x8001] = 0x0076;
         test_cpu.cpu.mem[0x0076] = 0b0011_1010;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x0076], 0b0111_0100);
+        assert_eq!(test_cpu.cpu.mem[0x0076], 0b0111_0101);
         assert_eq!(test_cpu.cpu.negative, false);
         assert_eq!(test_cpu.cpu.zero, false);
         assert_eq!(test_cpu.cpu.carry, false);

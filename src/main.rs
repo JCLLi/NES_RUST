@@ -12,7 +12,7 @@ use mapper::MapperType;
 
 use log::LevelFilter;
 use std::error::Error;
-use tudelft_nes_ppu::{run_cpu, Cpu, Mirroring, Ppu};
+use tudelft_nes_ppu::{run_cpu_headless_for, Cpu, Mirroring, Ppu};
 use tudelft_nes_test::TestableCpu;
 
 #[derive(Default)] // TODO delete this after files can be read (this is not useful for any implementation)
@@ -81,11 +81,7 @@ impl TestableCpu for MyCpu {
     }
 
     fn set_program_counter(&mut self, value: u16) {
-        if self.cartridge.prg_rom_size_in_16kb == 1 && value >= 0xc000 {
-            self.cpu.pc = value - 0x4000;
-        } else {
-            self.cpu.pc = value;
-        }
+        self.cpu.pc = value;
     }
 
     fn memory_read(&self, address: u16) -> u8 {
@@ -150,10 +146,11 @@ impl TestableCpu for MyCpu {
 fn main() {
     env_logger::builder().filter_level(LevelFilter::Info).init();
 
-    let cpu = MyCpu::default(); // TODO replace with get_cpu("filename")
+    pub const FILE: &[u8] = include_bytes!("../test_roms/nestest.nes");
 
-    log::info!("running cpu");
-    run_cpu(cpu, Mirroring::Horizontal);
+    let mut cpu = MyCpu::get_cpu(FILE).expect("In main error");
+
+    run_cpu_headless_for(&mut cpu, Mirroring::Horizontal, 100000).expect("File reading failed");
 }
 
 #[cfg(test)]
@@ -167,7 +164,7 @@ mod tests {
     fn test_all() {
         env_logger::builder().filter_level(LevelFilter::Info).init();
 
-        if let Err(e) = run_tests::<MyCpu>(TestSelector::NROM_TEST) {
+        if let Err(e) = run_tests::<MyCpu>(TestSelector::OFFICIAL_INSTRS) {
             log::error!("TEST FAILED: {e}");
             assert!(false);
         }
