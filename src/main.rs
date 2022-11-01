@@ -21,20 +21,25 @@ pub struct MyCpu {
     cartridge: Cartridge,
     cycle: u8, // Cycles of instruction
     mapper: MapperType,
+    jam: bool,
+    counter: u32,
 }
 
 /// See docs of `Cpu` for explanations of each function
 impl Cpu for MyCpu {
     fn tick(&mut self, ppu: &mut Ppu) -> Result<(), Box<dyn Error>> {
-        if self.cycle != 0 {
-            self.cycle -= 1;
-            return Ok(());
-        }
+        if self.jam == false {
+            if self.cycle != 0 {
+                self.cycle -= 1;
+                return Ok(());
+            }
 
-        Instruction::do_instruction(self, ppu);
-        self.cycle -= 1;
-        Result::Ok(())
-    }
+            Instruction::do_instruction(self, ppu);
+            self.cycle -= 1;
+            return Result::Ok(());
+        }
+       return Ok(());
+   }
 
     fn ppu_read_chr_rom(&self, offset: u16) -> u8 {
         self.cartridge.prg_rom_data[offset as usize]
@@ -77,6 +82,8 @@ impl TestableCpu for MyCpu {
             cartridge: Cartridge::generate_from_rom(rom),
             cycle: 0,
             mapper: MapperType::get_mapper(cartridge.mapper_number, cartridge),
+            jam: false,
+            counter: 0,
         })
     }
 
@@ -138,6 +145,8 @@ impl TestableCpu for MyCpu {
             },
             cycle: 0,
             mapper: MapperType::get_mapper(self.cartridge.mapper_number, cartridge),
+            jam: false,
+            counter: 0,
         };
         cpu.data_read(&mut dummy_ppu, address)
     }
@@ -149,6 +158,8 @@ fn main() {
     pub const FILE: &[u8] = include_bytes!("../test_roms/nestest.nes");
 
     let mut cpu = MyCpu::get_cpu(FILE).expect("In main error");
+
+    cpu.cpu.pc = 0xc000;
 
     run_cpu_headless_for(&mut cpu, Mirroring::Horizontal, 100000).expect("File reading failed");
 }
@@ -164,7 +175,7 @@ mod tests {
     fn test_all() {
         env_logger::builder().filter_level(LevelFilter::Info).init();
 
-        if let Err(e) = run_tests::<MyCpu>(TestSelector::OFFICIAL_INSTRS) {
+        if let Err(e) = run_tests::<MyCpu>(TestSelector::ALL_INSTRS) {
             log::error!("TEST FAILED: {e}");
             assert!(false);
         }

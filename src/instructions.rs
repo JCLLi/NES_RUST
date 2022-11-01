@@ -60,6 +60,29 @@ pub enum InstructionName {
     TXA,
     TXS,
     TYA,
+    //Unofficial instructions
+    ALR,
+    ANC,
+    ANE,
+    ARR,
+    DCP,
+    ISC,
+    LAS,
+    LAX,
+    LXA,
+    RLA,
+    RRA,
+    SAX,
+    SBX,
+    SHA,
+    SHX,
+    SHY,
+    SLO,
+    SRE,
+    TAS,
+    USBC,
+    NOPs,
+    JAM,
 }
 
 pub enum AddressingMode {
@@ -899,6 +922,557 @@ impl Instruction {
                 addressing_mode: AddressingMode::Implied,
                 cycle: 2,
             },
+            // Unofficial instructions
+            // ALR
+            0x4b => Instruction {
+                instruction_name: InstructionName::ALR,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // ANC
+            0x0b => Instruction {
+                instruction_name: InstructionName::ANC,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0x2b => Instruction {
+                instruction_name: InstructionName::ANC,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // ANE
+            0x8b => Instruction {
+                instruction_name: InstructionName::ANE,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // ARR
+            0x6b => Instruction {
+                instruction_name: InstructionName::ARR,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // DCP
+            0xc7 => Instruction {
+                instruction_name: InstructionName::DCP,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0xd7 => Instruction {
+                instruction_name: InstructionName::DCP,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0xcf => Instruction {
+                instruction_name: InstructionName::DCP,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0xdf => Instruction {
+                instruction_name: InstructionName::DCP,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            0xdb => Instruction {
+                instruction_name: InstructionName::DCP,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 7,
+            },
+            0xc3 => Instruction {
+                instruction_name: InstructionName::DCP,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 8,
+            },
+            0xd3 => Instruction {
+                instruction_name: InstructionName::DCP,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 8,
+            },
+            // ISC
+            0xe7 => Instruction {
+                instruction_name: InstructionName::ISC,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0xf7 => Instruction {
+                instruction_name: InstructionName::ISC,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0xef => Instruction {
+                instruction_name: InstructionName::ISC,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0xff => Instruction {
+                instruction_name: InstructionName::ISC,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            0xfb => Instruction {
+                instruction_name: InstructionName::ISC,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 7,
+            },
+            0xe3 => Instruction {
+                instruction_name: InstructionName::ISC,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 8,
+            },
+            0xf3 => Instruction {
+                instruction_name: InstructionName::ISC,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 8,
+            },
+            // LAS
+            0xbb => Instruction {
+                instruction_name: InstructionName::LAS,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 4,
+            },
+            // LAX
+            0xa7 => Instruction {
+                instruction_name: InstructionName::LAX,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0xb7 => Instruction {
+                instruction_name: InstructionName::LAX,
+                addressing_mode: AddressingMode::ZeroPageY,
+                cycle: 4,
+            },
+            0xaf => Instruction {
+                instruction_name: InstructionName::LAX,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 4,
+            },
+            0xbf => Instruction {
+                instruction_name: InstructionName::LAX,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 4,
+            },
+            0xa3 => Instruction {
+                instruction_name: InstructionName::LAX,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 6,
+            },
+            0xb3 => Instruction {
+                instruction_name: InstructionName::LAX,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 5,
+            },
+            // LXA
+            0xab => Instruction {
+                instruction_name: InstructionName::LXA,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // RLA
+            0x27 => Instruction {
+                instruction_name: InstructionName::RLA,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0x37 => Instruction {
+                instruction_name: InstructionName::RLA,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0x2f => Instruction {
+                instruction_name: InstructionName::RLA,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0x3f => Instruction {
+                instruction_name: InstructionName::RLA,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            0x3b => Instruction {
+                instruction_name: InstructionName::RLA,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 7,
+            },
+            0x23 => Instruction {
+                instruction_name: InstructionName::RLA,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 8,
+            },
+            0x33 => Instruction {
+                instruction_name: InstructionName::RLA,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 8,
+            },
+            // RRA
+            0x67 => Instruction {
+                instruction_name: InstructionName::RRA,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0x77 => Instruction {
+                instruction_name: InstructionName::RRA,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0x6f => Instruction {
+                instruction_name: InstructionName::RRA,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0x7f => Instruction {
+                instruction_name: InstructionName::RRA,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            0x7b => Instruction {
+                instruction_name: InstructionName::RRA,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 7,
+            },
+            0x63 => Instruction {
+                instruction_name: InstructionName::RRA,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 8,
+            },
+            0x73 => Instruction {
+                instruction_name: InstructionName::RRA,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 8,
+            },
+            // SAX
+            0x87 => Instruction {
+                instruction_name: InstructionName::SAX,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0x97 => Instruction {
+                instruction_name: InstructionName::SAX,
+                addressing_mode: AddressingMode::ZeroPageY,
+                cycle: 4,
+            },
+            0x8f => Instruction {
+                instruction_name: InstructionName::SAX,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 4,
+            },
+            0x83 => Instruction {
+                instruction_name: InstructionName::SAX,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 6,
+            },
+            // SBX
+            0xcb => Instruction {
+                instruction_name: InstructionName::SBX,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // SHA
+            0x9f => Instruction {
+                instruction_name: InstructionName::SHA,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 5,
+            },
+            0x93 => Instruction {
+                instruction_name: InstructionName::SHA,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 6,
+            },
+            // SHX
+            0x9e => Instruction {
+                instruction_name: InstructionName::SHX,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 5,
+            },
+            // SHY
+            0x9c => Instruction {
+                instruction_name: InstructionName::SHY,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 5,
+            },
+            // SLO
+            0x07 => Instruction {
+                instruction_name: InstructionName::SLO,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0x17 => Instruction {
+                instruction_name: InstructionName::SLO,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0x0f => Instruction {
+                instruction_name: InstructionName::SLO,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0x1f => Instruction {
+                instruction_name: InstructionName::SLO,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            0x1b => Instruction {
+                instruction_name: InstructionName::SLO,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 7,
+            },
+            0x03 => Instruction {
+                instruction_name: InstructionName::SLO,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 8,
+            },
+            0x13 => Instruction {
+                instruction_name: InstructionName::SLO,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 8,
+            },
+            // SRE
+            0x47 => Instruction {
+                instruction_name: InstructionName::SRE,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 5,
+            },
+            0x57 => Instruction {
+                instruction_name: InstructionName::SRE,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 6,
+            },
+            0x4f => Instruction {
+                instruction_name: InstructionName::SRE,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 6,
+            },
+            0x5f => Instruction {
+                instruction_name: InstructionName::SRE,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 7,
+            },
+            0x5b => Instruction {
+                instruction_name: InstructionName::SRE,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 7,
+            },
+            0x43 => Instruction {
+                instruction_name: InstructionName::SRE,
+                addressing_mode: AddressingMode::IndirectX,
+                cycle: 8,
+            },
+            0x53 => Instruction {
+                instruction_name: InstructionName::SRE,
+                addressing_mode: AddressingMode::IndirectY,
+                cycle: 8,
+            },
+            // TAS
+            0x9b => Instruction {
+                instruction_name: InstructionName::TAS,
+                addressing_mode: AddressingMode::AbsoluteY,
+                cycle: 5,
+            },
+            // USBC
+            0xeb => Instruction {
+                instruction_name: InstructionName::USBC,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // NOPs
+            // do nothing
+            0x1a => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 2,
+            },
+            0x3a => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 2,
+            },
+            0x5a => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 2,
+            },
+            0x7a => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 2,
+            },
+            0xda => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 2,
+            },
+            0xfa => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 2,
+            },
+            // NOPs: SKB
+            0x80 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0x82 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0x89 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0xc2 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            0xe2 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Immediate,
+                cycle: 2,
+            },
+            // NOPs: IGN
+            0x04 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0x44 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0x64 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPage,
+                cycle: 3,
+            },
+            0x14 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0x34 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0x54 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0x74 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0xd4 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0xf4 => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::ZeroPageX,
+                cycle: 4,
+            },
+            0x0c => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::Absolute,
+                cycle: 4,
+            },
+            0x1c => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0x3c => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0x5c => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0x7c => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0xdc => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            0xfc => Instruction {
+                instruction_name: InstructionName::NOPs,
+                addressing_mode: AddressingMode::AbsoluteX,
+                cycle: 4,
+            },
+            // JAM
+            0x02 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x12 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x22 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x32 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x42 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x52 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x62 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x72 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0x92 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0xb2 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0xd2 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
+            0xf2 => Instruction {
+                instruction_name: InstructionName::JAM,
+                addressing_mode: AddressingMode::Implied,
+                cycle: 1,
+            },
             _ => panic!("Invalid Opcode: {:08x}", opcode),
         }
     }
@@ -907,6 +1481,28 @@ impl Instruction {
 
         let instr = Instruction::get_instruction(opcode);
         mycpu.cycle = instr.cycle;
+        mycpu.counter += 1;
+        // let p = mycpu.cpu.carry as u8 |
+        //     (mycpu.cpu.zero as u8) << 1 |
+        //     (mycpu.cpu.irq_dis as u8) << 2 |
+        //     (mycpu.cpu.dec as u8) << 3 |
+        //     (mycpu.cpu.b as u8) << 4 |
+        //     0b0010_0000 | //ignore_flag
+        //     (mycpu.cpu.overflow as u8) << 6 |
+        //     (mycpu.cpu.negative as u8) << 7;
+
+        // if mycpu.counter > 0 {
+        //     println!(
+        //         "{:<02X},,A:{:<02X},,X:{:<02X},,Y:{:<02X},,P:{:<02X},,SP:{:<02X},,PC:{:<02X}",
+        //         opcode,
+        //         mycpu.cpu.a,
+        //         mycpu.cpu.x,
+        //         mycpu.cpu.y,
+        //         p,
+        //         mycpu.cpu.sp & 0xFF,
+        //         mycpu.cpu.pc
+        //     );
+        // }
 
         match instr.instruction_name {
             InstructionName::ADC => {
@@ -1428,6 +2024,310 @@ impl Instruction {
                 mycpu.cpu.zero = mycpu.cpu.a == 0;
                 mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
                 mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::ALR=>{
+
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let mut m = mycpu.data_read(ppu, addr);
+                mycpu.cpu.a &= m;
+                mycpu.cpu.carry = mycpu.cpu.a & 0x1 == 0x1;
+                let res = mycpu.cpu.a >> 1;
+
+                mycpu.cpu.a = res;
+
+
+                mycpu.cpu.negative = false; // The 7th bit cannot be 1 when shifted to the right
+                mycpu.cpu.zero = res == 0;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::ANC=>{
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let m = mycpu.data_read(ppu, addr);
+
+                // operation
+                mycpu.cpu.a &= m;
+
+                //flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+                //copy flag n to c
+                mycpu.cpu.carry = mycpu.cpu.negative;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::ANE=>{
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::ARR=>{
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let m = mycpu.data_read(ppu, addr);
+
+                // operation AND and shift
+                mycpu.cpu.a &= m;
+                //mycpu.cpu.carry = mycpu.cpu.a & 0x1 == 0x1;
+
+                let res = (mycpu.cpu.a >> 1) | ((mycpu.cpu.carry as u8) << 7);
+                mycpu.cpu.a = res;
+
+                mycpu.cpu.negative = res & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = res == 0;
+                mycpu.cpu.carry = res & 0b0100_0000 == 0b0100_0000;
+                mycpu.cpu.overflow = ((mycpu.cpu.a<<1) ^ mycpu.cpu.a) & 0b0100_0000 != 0;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::DCP=>{
+                // do DEC
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let value = mycpu.data_read(ppu, addr).wrapping_sub(1);
+                let result = mycpu.cpu.a.wrapping_sub(value);
+                mycpu.data_write(ppu, addr, value);
+                // flags
+                mycpu.cpu.negative = result & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = result == 0;
+                mycpu.cpu.carry = value <= mycpu.cpu.a as u8;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::ISC=>{
+                // do INC
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let value = mycpu.data_read(ppu, addr).wrapping_add(1);
+                mycpu.data_write(ppu, addr, value);
+                // do SBC
+                let m = mycpu.data_read(ppu, addr);
+
+                let a_is_positive = mycpu.cpu.a < 0b1000_0000;
+                let m_is_positive = m < 0b1000_0000;
+                let a_positive_and_m_negative = a_is_positive && !m_is_positive;
+                let a_negative_and_m_positive = !a_is_positive && m_is_positive;
+
+                let (temp, carry1) = mycpu.cpu.a.overflowing_sub(m);
+                let (res, carry2) = temp.overflowing_sub(if mycpu.cpu.carry { 0 } else { 1 });
+                mycpu.cpu.carry = !(carry1 || carry2);
+                mycpu.cpu.zero = res == 0;
+                mycpu.cpu.negative = (res & 0b1000_0000) == 0b1000_0000;
+                mycpu.cpu.overflow = (a_positive_and_m_negative && res > 0b0111_1111)
+                    || (a_negative_and_m_positive && res < 0b1000_0000);
+                mycpu.cpu.a = res as u8;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::LAS=>{
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::LAX=>{
+                // do LDA
+                //value & a
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                mycpu.cpu.a = mycpu.data_read(ppu, addr);
+                //ps
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                // do TAX
+                mycpu.cpu.x = mycpu.cpu.a;
+                //ps
+                mycpu.cpu.zero = mycpu.cpu.x == 0;
+                mycpu.cpu.negative = mycpu.cpu.x & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::LXA=>{
+                // do LDA
+                //value & a
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                mycpu.cpu.a = mycpu.data_read(ppu, addr);
+                //ps
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                // do TAX
+                mycpu.cpu.x = mycpu.cpu.a;
+                //ps
+                mycpu.cpu.zero = mycpu.cpu.x == 0;
+                mycpu.cpu.negative = mycpu.cpu.x & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::RLA=>{
+                // ROL
+                let shift_accumulator =
+                    matches!(instr.addressing_mode, AddressingMode::Accumulator);
+                let mut addr = 0x00;
+
+                let m = if shift_accumulator {
+                    mycpu.cpu.a
+                } else {
+                    addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                    mycpu.data_read(ppu, addr)
+                };
+
+                let res: u16 = ((m as u16) << 1) | (mycpu.cpu.carry as u16);
+
+                if shift_accumulator {
+                    mycpu.cpu.a = (res & 0xFF) as u8;
+                } else {
+                    mycpu.data_write(ppu, addr, (res & 0xFF) as u8);
+                }
+                mycpu.cpu.carry = res & 0x100 == 0x100;
+
+                // AND
+                let m1 = mycpu.data_read(ppu, addr);
+                mycpu.cpu.a &= m1;
+
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::RRA=>{
+                // ROR
+                let addr =  get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+
+                let m = mycpu.data_read(ppu, addr);
+
+                let res_ror = ((m >> 1) | ((mycpu.cpu.carry as u8) << 7)) as u16;
+                mycpu.data_write(ppu, addr, res_ror as u8);
+                mycpu.cpu.carry = m & 0b0000_0001 != 0;
+
+                // ADC according to the carry flag
+                let mut res = (mycpu.cpu.a as u16) + res_ror;
+                if mycpu.cpu.carry {
+                    res += 1;
+                }
+                //mycpu.data_write(ppu, addr, res as u8);
+
+                mycpu.cpu.overflow =
+                    ((mycpu.cpu.a ^ (res as u8)) & ((res_ror as u8) ^ (res as u8)) & 0x80) == 0x80;
+                mycpu.cpu.a = res as u8;
+
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+
+                mycpu.cpu.carry = res > 0xff;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::SAX=>{
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                // operation
+                let res = mycpu.cpu.a & mycpu.cpu.x;
+                mycpu.data_write(ppu, addr, res);
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::SBX=>{
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let res = mycpu.cpu.x & mycpu.cpu.a;
+                let m = mycpu.data_read(ppu,addr);
+                mycpu.cpu.x = res.wrapping_sub(m);
+                //set flags as CMP
+                mycpu.cpu.zero = mycpu.cpu.x == 0;
+                mycpu.cpu.negative = mycpu.cpu.x & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.carry = m <= res;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::SHA=>{
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::SHX=>{
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let hh = (addr >> 8).wrapping_add(1);
+                let res = (mycpu.cpu.x as u16 & hh) as u8;
+
+                if mycpu.cpu.x.wrapping_add( mycpu.data_read(ppu,addr-2)) <= 0xFF {
+                    mycpu.data_write(ppu,addr,res);
+                }
+
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::SHY=>{
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let hh = (addr >> 8).wrapping_add(1);
+                let res = (mycpu.cpu.y as u16 & hh) as u8;
+
+
+                if mycpu.cpu.y.wrapping_add( mycpu.data_read(ppu,addr-2)) <= 0xFF {
+                    mycpu.data_write(ppu,addr,res);
+                };
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::SLO=>{
+                // ASL
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let m = mycpu.data_read(ppu, addr);
+                // Carry flag
+                mycpu.cpu.carry = m & 0b1000_0000 == 0b1000_0000;
+                let res = m << 1;
+                mycpu.data_write(ppu,addr,res);
+                // ORA
+                mycpu.cpu.a |= res as u8;
+                // Negative and zero flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::SRE=>{
+                // LSR
+                let shift_accumulator =
+                    matches!(instr.addressing_mode, AddressingMode::Accumulator);
+                let mut addr = 0x00;
+
+                let m = if shift_accumulator {
+                    mycpu.cpu.a
+                } else {
+                    addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                    mycpu.data_read(ppu, addr)
+                };
+
+                // Carry flag
+                mycpu.cpu.carry = m & 0x1 == 0x1;
+
+                // operation
+                let res = m >> 1;
+
+                // Writeback
+                if shift_accumulator {
+                    mycpu.cpu.a = res;
+                } else {
+                    mycpu.data_write(ppu, addr, res);
+                }
+
+                // EOR
+                // operation
+                mycpu.cpu.a ^= res;
+
+                //flags
+                mycpu.cpu.negative = mycpu.cpu.a & 0b1000_0000 == 0b1000_0000;
+                mycpu.cpu.zero = mycpu.cpu.a == 0;
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::TAS=>{
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::USBC=>{
+                let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                let m = mycpu.data_read(ppu, addr);
+
+                let a_is_positive = mycpu.cpu.a < 0b1000_0000;
+                let m_is_positive = m < 0b1000_0000;
+                let a_positive_and_m_negative = a_is_positive && !m_is_positive;
+                let a_negative_and_m_positive = !a_is_positive && m_is_positive;
+
+                let (temp, carry1) = mycpu.cpu.a.overflowing_sub(m);
+                let (res, carry2) = temp.overflowing_sub(if mycpu.cpu.carry { 0 } else { 1 });
+                mycpu.cpu.carry = !(carry1 || carry2);
+                mycpu.cpu.zero = res == 0;
+                mycpu.cpu.negative = (res & 0b1000_0000) == 0b1000_0000;
+                mycpu.cpu.overflow = (a_positive_and_m_negative && res > 0b0111_1111)
+                    || (a_negative_and_m_positive && res < 0b1000_0000);
+                mycpu.cpu.a = res as u8;
+
+                mycpu.cpu.pc += 1; //Next instruction
+            }
+            InstructionName::NOPs=>{
+                if matches!(instr.addressing_mode, AddressingMode::Implied ) {
+                    0;
+                }else {
+                    let addr = get_data_address(&mut mycpu.cpu, instr.addressing_mode, &mycpu.mapper);
+                    mycpu.data_read(ppu, addr);
+                }
+                mycpu.cpu.pc += 1; // Next instruction
+            }
+            InstructionName::JAM=>{
+                // to kill the program
+                mycpu.jam = true;
             }
         }
     }
