@@ -43,8 +43,11 @@ impl MyCpu {
                 oam_data[(i - page_start) as usize] = self.data_read(ppu, i);
             }
             ppu.write_oam_dma(oam_data);
+        } else if (0x0000..0x2000).contains(&addr) {
+            let remainder = addr % 0x0800; // Mirror RAM address
+            self.cpu.mem[remainder as usize] = data;
         } else {
-            self.cpu.mem[addr as usize] = data;
+            self.cpu.mem[addr as usize] = data; // NOTE this should not be called
         }
     }
 
@@ -78,8 +81,11 @@ impl MyCpu {
                 7 => ppu.read_ppu_register(PpuRegister::Data, self),
                 _ => panic!("Out of ppu map bound"),
             }
+        } else if (0x0000..0x2000).contains(&addr) {
+            let remainder = addr % 0x0800; // Mirror RAM address
+            self.cpu.mem[remainder as usize]
         } else {
-            self.cpu.mem[addr as usize]
+            self.cpu.mem[addr as usize] // NOTE this should not be called
         }
     }
 }
@@ -88,6 +94,23 @@ mod mycpu_tests {
     use crate::MyCpu;
     use tudelft_nes_ppu::{Mirroring, Ppu};
 
+    #[test]
+    fn test_ram_mirror() {
+        let mut test_cpu = MyCpu::default();
+        let mut ppu = Ppu::new(Mirroring::Vertical);
+        test_cpu.data_write(&mut ppu, 0x800, 0x69);
+        test_cpu.data_write(&mut ppu, 0x801, 0x67);
+        test_cpu.data_write(&mut ppu, 0x7ff, 0x66);
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x0000), 0x69); // Test mirrored address
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x0800), 0x69);
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x1000), 0x69); // Test mirrored address
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x0001), 0x67); // Test mirrored address
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x0801), 0x67);
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x1001), 0x67); // Test mirrored address
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x0fff), 0x66); // Test mirrored address
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x07ff), 0x66);
+        assert_eq!(test_cpu.data_read(&mut ppu, 0x1fff), 0x66); // Test mirrored address
+    }
     #[test]
     fn ppu_test() {
         let mut test_cpu = MyCpu::default();

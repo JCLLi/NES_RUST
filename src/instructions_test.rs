@@ -293,11 +293,11 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.pc, 0x8001);
 
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x1100] = 0x86;
-        test_cpu.cpu.mem[0x1101] = 0x67;
+        test_cpu.cpu.mem[0x0200] = 0x86;
+        test_cpu.cpu.mem[0x0201] = 0x67;
         test_cpu.cpu.mem[0x8000] = 0x6c; // JMP Indirect
         test_cpu.cpu.mem[0x8001] = 0x00;
-        test_cpu.cpu.mem[0x8002] = 0x11;
+        test_cpu.cpu.mem[0x8002] = 0x02;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.pc, 0x6786);
     }
@@ -362,8 +362,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xa1; // LDA Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01; // address
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x48; //x:0x03
+        test_cpu.cpu.mem[0x05] = 0x07; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0711] = 0x48; //x:0x03
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.a, 0x48);
 
@@ -372,8 +372,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xa1; // LDA Indirect X Overflow
         test_cpu.cpu.mem[0x8001] = 0xfe; // address
         test_cpu.cpu.mem[0xff] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x00] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x48;
+        test_cpu.cpu.mem[0x00] = 0x06; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0611] = 0x48;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.a, 0x48);
 
@@ -382,8 +382,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xb1; // LDA Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x49;
+        test_cpu.cpu.mem[0x0002] = 0x05; //address hh;
+        test_cpu.cpu.mem[0x0514] = 0x49;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.a, 0x49);
     }
@@ -577,19 +577,19 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0x81; // STA Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01; //addr of m
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x05] = 0x06; //address hh = address + x + 1
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x1211], 0x48);
+        assert_eq!(test_cpu.cpu.mem[0x0611], 0x48);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x01;
-        test_cpu.cpu.a = 0x48;
-        test_cpu.cpu.mem[0x8000] = 0xa1; // STA Indirect X Overflow
+        test_cpu.cpu.a = 0x50;
+        test_cpu.cpu.mem[0x8000] = 0x81; // STA Indirect X Overflow
         test_cpu.cpu.mem[0x8001] = 0xfe; // address
         test_cpu.cpu.mem[0xff] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x00] = 0x12; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x00] = 0x01; //address hh = address + x + 1
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x1211], 0x48);
+        assert_eq!(test_cpu.cpu.mem[0x0111], 0x50);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
@@ -597,9 +597,9 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0x91; // STA Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
+        test_cpu.cpu.mem[0x0002] = 0x04; //address hh;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x1214], 0x49);
+        assert_eq!(test_cpu.cpu.mem[0x0414], 0x49);
     }
     #[test]
     fn test_stx() {
@@ -1119,8 +1119,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xc1; // CMP Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01;
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x43; // value of m
+        test_cpu.cpu.mem[0x05] = 0x05; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0511] = 0x43; // value of m
         test_cpu.cpu.a = 0x43;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, true);
@@ -1134,8 +1134,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xc1; // CMP Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01;
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x44; // value of m
+        test_cpu.cpu.mem[0x05] = 0x04; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0411] = 0x44; // value of m
         test_cpu.cpu.a = 0x43;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, false);
@@ -1151,8 +1151,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xd1; // CMP Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x42;
+        test_cpu.cpu.mem[0x0002] = 0x02; //address hh;
+        test_cpu.cpu.mem[0x0214] = 0x42;
         test_cpu.cpu.a = 0x43;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, false);
@@ -1166,8 +1166,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xd1; // CMP Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x42;
+        test_cpu.cpu.mem[0x0002] = 0x03; //address hh;
+        test_cpu.cpu.mem[0x0314] = 0x42;
         test_cpu.cpu.a = 0x42;
         println!("number cpu.a {}", test_cpu.cpu.x);
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
@@ -1182,8 +1182,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xd1; // CMP Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x42;
+        test_cpu.cpu.mem[0x0002] = 0x04; //address hh;
+        test_cpu.cpu.mem[0x0414] = 0x42;
         test_cpu.cpu.a = 0x41;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, false);
