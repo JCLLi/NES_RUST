@@ -1,37 +1,64 @@
+//! Module that emulates a physical NES cartridge.
 #[derive(PartialEq, Eq, Debug)]
+
+/// A struct representing a physical NES cartridge which holds the contents contained in an NES file.
 pub struct Cartridge {
     // HEADER
+    /// Size of program-ROM specified in multiples of 16 kB.
     pub prg_rom_size_in_16kb: u8,
+    /// Size of character-ROM specified in multiples of 8 kB.
     pub chr_rom_size_in_8kb: u8,
 
     // Flags 6
+    /// ID of used mapper (Currently supported: 0 -> NROM, 1 -> MMC1).
     pub mapper_number: u8,
+    /// Indicates whether ROM from 0x8000 to 0xbfff is mirrored to 0xc0000 to 0xffff.
     pub mirroring_control: bool,
+    /// Indicates whether trainer data is available.
     pub trainer_available: bool,
+    /// Indicates whether cartridge contains battery-backed PRG RAM ($6000-7FFF) or other persistent memory.
     pub battery_backed_prg_ram_available: bool,
+    /// Indicates whether mirroring control is used.
     pub mirroring_mode: bool,
 
     // Flags 7
     // Upper nibble included in field of Flag 6
+    /// Indicates whether flags 8-15 are in NES 2.0 format.
     pub nes_2_0_format: bool,
+    /// Playchoice 10 supported.
     pub playchoice_10: bool,
+    /// VS Unisystem supported.
     pub vs_unisystem: bool,
 
     // Flags 8
+    /// Size of PGRM RAM specified in multiples of 8 kB.
     pub prg_ram_size_in_8kb: u8, // TODO according to iNES format specs a RAM of 0 should still be 8 kB
 
     // Flags 9
+    /// Specifies which TV system is used (0 -> NTSC, 1 -> PAL).
     pub tv_system_mode: bool,
 
     // Flag 10
+    /// Indicates whether PRG RAM is available.
     pub prg_ram_present: bool,
+    /// Indicates whether bus conflicts are present on board.
     pub bus_conflicts: bool,
 
+    /// Actual PRG ROM data stored in a Vec<u8>.
     pub prg_rom_data: Vec<u8>,
+    /// Actual CHR ROM data stored in a Vec<u8>.
     pub chr_rom_data: Vec<u8>,
 }
 
 impl Cartridge {
+    /// Creates and returns a Cartridge instance from an NES file provided as a vector of bytes.
+    ///
+    /// # Arguments
+    ///
+    /// * `rom` - A byte slice that contains the input .nes file.
+    ///
+    /// # Return
+    /// * `Cartridge` - a Cartridge instance containing the data of `rom`.
     pub fn generate_from_rom(rom: &[u8]) -> Cartridge {
         if rom[0] != b'N' || rom[1] != b'E' || rom[2] != b'S' || rom[3] != 0x1a {
             panic!("Not iNES format")
@@ -89,6 +116,10 @@ impl Cartridge {
 }
 
 impl Default for Cartridge {
+    /// Implements the trait `Default` for Cartridge which returns a default instance of itself. All fields are set to their default state. The memory is filled with zeros.
+    ///
+    /// # Return
+    /// * `Cartridge` - Instance of the struct in the default state.
     fn default() -> Self {
         let prg_rom_size_in_16kb = 1;
         let chr_rom_size_in_8kb = 1;

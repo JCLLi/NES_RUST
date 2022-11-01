@@ -1,25 +1,41 @@
+//! This module handles the mapping of logical addresses used by the CPU and the physical memory location in the cartridge
+
 use crate::Cartridge;
 
+/// A struct translating the memory address used by the CPU into the physical memory location depending on the mapper that is used
 #[derive(Debug, PartialEq, Eq)]
 pub enum MapperType {
-    Nrom {
-        prg_rom_size_in_16kb: u8,
-    },
+    /// Simple mapper which maps the logical address to the same physical address.
+    Nrom { prg_rom_size_in_16kb: u8 },
+    /// Nintendo MMC1 mapper.
     MMC1 {
         // Settings
+        /// Indicates whether mirroring is used by PPU.
         mirroring: u8,
+        /// Specifies the PRGM ROM bank mode.
         prg_rom_bank_mode: u8,
+        /// Specifies the CHR ROM bank mode.
         chr_rom_bank_mode: bool,
+        /// Specifies which CHR are used by the PPU.
         chr_bank0: u8,
+        /// Specifies which CHR are used by the PPU.
         chr_bank1: u8,
+        /// Location of the switchable bank.
         prg_bank: u8,
+        /// Indicates whether in MMC1B mode is used.
         mmc1b: bool,
 
+        /// Register used by load-register.
         shift_register: u8,
+        /// Data bits in the shift register.
         amount_shifted: u8,
     },
 }
 impl Default for MapperType {
+    /// Implements the trait `Default` for MapperType which returns a default instance which uses the NROM mapper with the ROM size of 16 kB.
+    ///
+    /// # Return
+    /// * `Self` - Instance of the struct in the default state.
     fn default() -> Self {
         MapperType::Nrom {
             prg_rom_size_in_16kb: 1,
@@ -27,6 +43,15 @@ impl Default for MapperType {
     }
 }
 impl MapperType {
+    /// Return a mapper instance based on the provided cartridge.
+    ///
+    /// # Arguments
+    ///
+    /// * `mapper_number` - ID of the mapper.
+    /// * `cartridge` - An instance of `Cartridge` used to determine the prg rom size.
+    ///
+    /// # Return
+    /// * `MapperType` - Enum of mapper. If mapper ID is not known, the function panics.
     pub fn get_mapper(mapper_number: u8, cartridge: Cartridge) -> MapperType {
         match mapper_number {
             0 => MapperType::Nrom {
@@ -47,6 +72,16 @@ impl MapperType {
             _ => panic!("Mapper not implemented/known"),
         }
     }
+
+    /// Return the mapped address.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - Instance of mapper itself.
+    /// * `addr` - Address that shall be translated to the mapped address.
+    ///
+    /// # Return
+    /// * `u16` - Mapped address.
     pub fn get_mapper_address(&self, addr: u16) -> u16 {
         match self {
             MapperType::Nrom {
@@ -70,6 +105,18 @@ impl MapperType {
             MapperType::MMC1 { .. } => addr,
         }
     }
+
+    /// Write to mapped address (Not possible for NROM mapper).
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - Borrowed instance of mapper itself.
+    /// * `addr` - Address to which the data byte shall be written.
+    /// * `data` - Data byte that shall be written.
+    /// * `mem`  - Whole memory of a i. e. CPU.
+    /// * `cart` - Borrowed instance of cartridge.
+    ///
+    /// Nothing is returned.
     pub fn write_mapper(
         &mut self,
         addr: u16,
@@ -93,7 +140,6 @@ impl MapperType {
                 ref mut amount_shifted,
             } => {
                 let mut prg_bank_changed = false;
-                let mut chr_bank_changed = false;
                 *shift_register >>= 1;
                 *shift_register |= (data & 0x1) << 4;
                 *amount_shifted += 1;
@@ -109,13 +155,10 @@ impl MapperType {
                         *prg_rom_bank_mode = (*shift_register & 0b1100) >> 2;
                         *chr_rom_bank_mode = (*shift_register & 0b1_0000) == 0b1_0000;
                         prg_bank_changed = true;
-                        chr_bank_changed = true;
                     } else if (0xa000..=0xbfff).contains(&addr) {
                         *chr_bank0 = *shift_register & 0b1_1111;
-                        chr_bank_changed = true;
                     } else if (0xc000..=0xdfff).contains(&addr) {
                         *chr_bank1 = *shift_register & 0b1_1111;
-                        chr_bank_changed = true;
                     } else if (0xe000..=0xffff).contains(&addr) {
                         *prg_bank = *shift_register & 0b1111;
                         *mmc1b = *shift_register & 0b1_0000 == 0b1_0000;
@@ -165,10 +208,50 @@ impl MapperType {
                             }
                         }
                     }
-                    if chr_bank_changed {
-                        // TODO this has to be implemented
+                }
+            }
+        }
+    }
+
+    pub fn get_chr_data(&self, cart: &Cartridge, offset: u16) -> u8 {
+        if cart.chr_rom_size_in_8kb == 0 {
+            return 0; // TODO handle chr RAM properly
+        }
+        let mut chr_bank: [u8; 8192] = [0; 8192];
+        match self {
+            MapperType::Nrom { .. } => cart.chr_rom_data[offset as usize],
+            MapperType::MMC1 {
+                mirroring: _,
+                prg_rom_bank_mode: _,
+                chr_rom_bank_mode,
+                chr_bank0,
+                chr_bank1,
+                prg_bank: _,
+                mmc1b: _,
+                // Stored values
+                shift_register: _,
+                amount_shifted: _,
+            } => {
+                if *chr_rom_bank_mode {
+                    for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
+                        if i < 0x0fff {
+                            *mem_ref = cart.chr_rom_data
+                                [(i + 4096 * (chr_bank0 & 0b1110) as usize) as usize];
+                        } else {
+                            *mem_ref = cart.chr_rom_data
+                                [(i + 4096 * (chr_bank0 & 0b1111) as usize) as usize];
+                        }
+                    }
+                } else {
+                    for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
+                        if i < 0x0fff {
+                            *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank0 as usize) as usize];
+                        } else {
+                            *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank1 as usize) as usize];
+                        }
                     }
                 }
+                chr_bank[offset as usize]
             }
         }
     }
@@ -176,8 +259,9 @@ impl MapperType {
 
 #[cfg(test)]
 mod mapper_tests {
+    use crate::bus::Bus;
     use crate::MapperType::{Nrom, MMC1};
-    use crate::{Cartridge, Cpu6502, MapperType, MyCpu};
+    use crate::{Cartridge, Cpu6502, MapperType};
 
     #[test]
     fn test_nrom() {
@@ -276,7 +360,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -292,14 +376,13 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            jam: false,
         };
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -319,16 +402,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xe000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xe000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -411,7 +491,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -427,14 +507,13 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            jam: false,
         };
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
@@ -455,16 +534,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -546,7 +622,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -562,14 +638,13 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            jam: false,
         };
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
@@ -590,16 +665,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -681,7 +753,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -697,14 +769,13 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            jam: false,
         };
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b1111, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b0111, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0x8000, 0b1111, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0x8000, 0b0111, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
@@ -725,16 +796,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0x8000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0x8000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0x8000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
