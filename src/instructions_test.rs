@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod instruction_tests {
     use crate::instructions::Instruction;
-    use crate::MyCpu;
+    use crate::Bus;
     use tudelft_nes_ppu::{Mirroring, Ppu};
 
     #[test]
     fn test_bcc() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x90; // BCC Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -30,7 +30,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_bcs() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xb0; // BCS Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -54,7 +54,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_beq() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xf0; // BEQ Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -78,7 +78,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_bit() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x24; // BIT Zero Page
         test_cpu.cpu.mem[0x8001] = 0xff;
@@ -109,7 +109,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_bmi() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x30; // BMI Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -133,7 +133,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_bne() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xd0; // BNE Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -157,7 +157,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_bpl() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x10; // BPL Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -181,7 +181,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_bvc() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x50; // BVC Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -205,7 +205,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_bvs() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x70; // BVS Relative
         test_cpu.cpu.mem[0x8001] = 0x08;
@@ -229,7 +229,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_inx() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.x = 5;
         test_cpu.cpu.mem[0x8000] = 0xe8; // INX Implied
@@ -256,7 +256,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_iny() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.y = 6;
         test_cpu.cpu.mem[0x8000] = 0xc8; // INY Implied
@@ -284,7 +284,7 @@ mod instruction_tests {
 
     #[test]
     fn test_jmp() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x4c; // JMP Absolute
         test_cpu.cpu.mem[0x8001] = 0x01;
@@ -293,17 +293,17 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.pc, 0x8001);
 
         test_cpu.cpu.pc = 0x8000;
-        test_cpu.cpu.mem[0x1100] = 0x86;
-        test_cpu.cpu.mem[0x1101] = 0x67;
+        test_cpu.cpu.mem[0x0200] = 0x86;
+        test_cpu.cpu.mem[0x0201] = 0x67;
         test_cpu.cpu.mem[0x8000] = 0x6c; // JMP Indirect
         test_cpu.cpu.mem[0x8001] = 0x00;
-        test_cpu.cpu.mem[0x8002] = 0x11;
+        test_cpu.cpu.mem[0x8002] = 0x02;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.pc, 0x6786);
     }
     #[test]
     fn test_lda() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xa9; // LDY Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -362,8 +362,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xa1; // LDA Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01; // address
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x48; //x:0x03
+        test_cpu.cpu.mem[0x05] = 0x07; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0711] = 0x48; //x:0x03
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.a, 0x48);
 
@@ -372,8 +372,8 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xa1; // LDA Indirect X Overflow
         test_cpu.cpu.mem[0x8001] = 0xfe; // address
         test_cpu.cpu.mem[0xff] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x00] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x48;
+        test_cpu.cpu.mem[0x00] = 0x06; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0611] = 0x48;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.a, 0x48);
 
@@ -382,14 +382,14 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0xb1; // LDA Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x49;
+        test_cpu.cpu.mem[0x0002] = 0x05; //address hh;
+        test_cpu.cpu.mem[0x0514] = 0x49;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.a, 0x49);
     }
     #[test]
     fn test_ldx() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xa2; // LDX Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -436,7 +436,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_ldy() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xa0; // LDY Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -483,7 +483,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_rti_brk() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x00; // BRK Implied
         test_cpu.cpu.zero = true; // Set a status flag
@@ -503,7 +503,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_rts_jsr() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0x20; // JSR Absolute
         test_cpu.cpu.mem[0x8001] = 0x01;
@@ -519,7 +519,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_nop() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xea; // NOP Implied
@@ -528,7 +528,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_sta() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.a = 0x43;
@@ -577,19 +577,19 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0x81; // STA Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01; //addr of m
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x05] = 0x06; //address hh = address + x + 1
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x1211], 0x48);
+        assert_eq!(test_cpu.cpu.mem[0x0611], 0x48);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x01;
-        test_cpu.cpu.a = 0x48;
-        test_cpu.cpu.mem[0x8000] = 0xa1; // STA Indirect X Overflow
+        test_cpu.cpu.a = 0x50;
+        test_cpu.cpu.mem[0x8000] = 0x81; // STA Indirect X Overflow
         test_cpu.cpu.mem[0x8001] = 0xfe; // address
         test_cpu.cpu.mem[0xff] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x00] = 0x12; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x00] = 0x01; //address hh = address + x + 1
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x1211], 0x48);
+        assert_eq!(test_cpu.cpu.mem[0x0111], 0x50);
 
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
@@ -597,13 +597,13 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x8000] = 0x91; // STA Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
+        test_cpu.cpu.mem[0x0002] = 0x04; //address hh;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
-        assert_eq!(test_cpu.cpu.mem[0x1214], 0x49);
+        assert_eq!(test_cpu.cpu.mem[0x0414], 0x49);
     }
     #[test]
     fn test_stx() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x43;
@@ -630,7 +630,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_sty() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x43;
@@ -658,7 +658,7 @@ mod instruction_tests {
     //inc & dec
     #[test]
     fn test_inc() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x0001] = 0x42;
@@ -702,7 +702,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_dec() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x0001] = 0x44;
@@ -746,7 +746,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_dex() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x44;
@@ -774,7 +774,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_dey() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x44;
@@ -803,7 +803,7 @@ mod instruction_tests {
     //set & clear flag
     #[test]
     fn test_sec() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0x38; // SEC Implied
@@ -812,7 +812,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_sed() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xf8; // SED Implied
@@ -821,7 +821,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_sei() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0x78; // SEI Implied
@@ -830,7 +830,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_clc() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.carry = true;
@@ -840,7 +840,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_cld() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.dec = true;
@@ -850,7 +850,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_cli() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.irq_dis = true;
@@ -860,7 +860,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_clv() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.overflow = true;
@@ -873,7 +873,7 @@ mod instruction_tests {
     fn test_cmp() {
         // CMP Immediate
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xc9; // CMP Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -883,7 +883,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xc9; // CMP Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -893,7 +893,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xc9; // CMP Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -905,7 +905,7 @@ mod instruction_tests {
 
         //CMP Zero Page
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xc5; // CMP Zero Page
@@ -917,7 +917,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xc5; // CMP Zero Page
@@ -929,7 +929,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xc5; // CMP Zero Page
@@ -943,7 +943,7 @@ mod instruction_tests {
 
         // CMP Zero Page X
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x02;
@@ -956,7 +956,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x02;
@@ -969,7 +969,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x02;
@@ -984,7 +984,7 @@ mod instruction_tests {
 
         // CMP Absolute
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xcd; // CMP Absolute
@@ -997,7 +997,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xcd; // CMP Absolute
@@ -1010,7 +1010,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xcd; // CMP Absolute
@@ -1025,7 +1025,7 @@ mod instruction_tests {
 
         // CMP Absolute X
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x3;
@@ -1039,7 +1039,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x3;
@@ -1053,7 +1053,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x3;
@@ -1069,7 +1069,7 @@ mod instruction_tests {
 
         // CMP Absolute Y
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
@@ -1083,7 +1083,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
@@ -1097,7 +1097,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
@@ -1112,30 +1112,30 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.negative, true);
 
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x03;
         test_cpu.cpu.mem[0x8000] = 0xc1; // CMP Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01;
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x43; // value of m
+        test_cpu.cpu.mem[0x05] = 0x05; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0511] = 0x43; // value of m
         test_cpu.cpu.a = 0x43;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, true);
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x03;
         test_cpu.cpu.mem[0x8000] = 0xc1; // CMP Indirect X
         test_cpu.cpu.mem[0x8001] = 0x01;
         test_cpu.cpu.mem[0x04] = 0x11; //address ll = address + x
-        test_cpu.cpu.mem[0x05] = 0x12; //address hh = address + x + 1
-        test_cpu.cpu.mem[0x1211] = 0x44; // value of m
+        test_cpu.cpu.mem[0x05] = 0x04; //address hh = address + x + 1
+        test_cpu.cpu.mem[0x0411] = 0x44; // value of m
         test_cpu.cpu.a = 0x43;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, false);
@@ -1144,30 +1144,30 @@ mod instruction_tests {
 
         // CMP Indirect Y
         // a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
         test_cpu.cpu.mem[0x8000] = 0xd1; // CMP Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x42;
+        test_cpu.cpu.mem[0x0002] = 0x02; //address hh;
+        test_cpu.cpu.mem[0x0214] = 0x42;
         test_cpu.cpu.a = 0x43;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, false);
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
         test_cpu.cpu.mem[0x8000] = 0xd1; // CMP Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x42;
+        test_cpu.cpu.mem[0x0002] = 0x03; //address hh;
+        test_cpu.cpu.mem[0x0314] = 0x42;
         test_cpu.cpu.a = 0x42;
         println!("number cpu.a {}", test_cpu.cpu.x);
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
@@ -1175,15 +1175,15 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x3;
         test_cpu.cpu.mem[0x8000] = 0xd1; // CMP Indirect Y
         test_cpu.cpu.mem[0x8001] = 0x01; //address;
         test_cpu.cpu.mem[0x0001] = 0x11; //address ll;
-        test_cpu.cpu.mem[0x0002] = 0x12; //address hh;
-        test_cpu.cpu.mem[0x1214] = 0x42;
+        test_cpu.cpu.mem[0x0002] = 0x04; //address hh;
+        test_cpu.cpu.mem[0x0414] = 0x42;
         test_cpu.cpu.a = 0x41;
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, false);
@@ -1194,7 +1194,7 @@ mod instruction_tests {
     fn test_cpx() {
         // CPX Immediate
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xe0; // CPX Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -1204,7 +1204,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xe0; // CPX Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -1214,7 +1214,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xe0; // CPX Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -1226,7 +1226,7 @@ mod instruction_tests {
 
         // CPX Zero Page
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xe4; // CPX Zero Page
@@ -1238,7 +1238,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xe4; // CPX Zero Page
@@ -1250,7 +1250,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xe4; // CPX Zero Page
@@ -1264,7 +1264,7 @@ mod instruction_tests {
 
         // CPX Absolute
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xec; // CPX Absolute
@@ -1277,7 +1277,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xec; // CPX Absolute
@@ -1290,7 +1290,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xec; // CPX Absolute
@@ -1307,7 +1307,7 @@ mod instruction_tests {
     fn test_cpy() {
         // CPY Immediate
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xc0; // CPY Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -1317,7 +1317,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xc0; // CPY Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -1327,7 +1327,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.mem[0x8000] = 0xc0; // CPY Immediate
         test_cpu.cpu.mem[0x8001] = 0x42;
@@ -1339,7 +1339,7 @@ mod instruction_tests {
 
         //CPY Zero Page
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xc4; // CPY Zero Page
@@ -1351,7 +1351,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xc4; // CPY Zero Page
@@ -1363,7 +1363,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xc4; // CPY Zero Page
@@ -1377,7 +1377,7 @@ mod instruction_tests {
 
         // CPY Absolute
         //a > mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xcc; // CPY Absolute
@@ -1390,7 +1390,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a = mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xcc; // CPY Absolute
@@ -1403,7 +1403,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.carry, true);
         assert_eq!(test_cpu.cpu.negative, false);
         //a < mem
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.mem[0x8000] = 0xcc; // CPY Absolute
@@ -1419,7 +1419,7 @@ mod instruction_tests {
     //push & pop
     #[test]
     fn test_pha() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.sp = 0x01dd;
         test_cpu.cpu.pc = 0x8000;
@@ -1433,7 +1433,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_php() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.sp = 0x01dd;
         test_cpu.cpu.pc = 0x8000;
@@ -1453,7 +1453,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_pla() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.sp = 0x01dd;
         test_cpu.cpu.mem[(test_cpu.cpu.sp + 1 as u16) as usize] = 0x44;
@@ -1464,7 +1464,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_plp() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.sp = 0x01dd;
         test_cpu.cpu.mem[(test_cpu.cpu.sp + 1 as u16) as usize] = 0xFF;
@@ -1484,7 +1484,7 @@ mod instruction_tests {
     //transfer
     #[test]
     fn test_tax() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.a = 0x80;
@@ -1493,7 +1493,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.x, 0x80); //test transfer
         assert_eq!(test_cpu.cpu.negative, true); //test negative flag
 
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.a = 0x00;
@@ -1503,7 +1503,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_tay() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.a = 0x80;
@@ -1512,7 +1512,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.y, 0x80); //test transfer
         assert_eq!(test_cpu.cpu.negative, true); //test negative flag
 
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.a = 0x00;
@@ -1522,7 +1522,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_tsx() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.sp = 0x180;
@@ -1532,7 +1532,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.negative, true); //test negative flag
         assert_eq!(test_cpu.cpu.zero, false); //test zero flag
 
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.sp = 0x100;
@@ -1544,7 +1544,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_txa() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x80;
@@ -1553,7 +1553,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.a, 0x80); //test transfer
         assert_eq!(test_cpu.cpu.negative, true); //test negative flag
 
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x00;
@@ -1563,7 +1563,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_txs() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.x = 0x80;
@@ -1573,7 +1573,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_tya() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x80;
@@ -1582,7 +1582,7 @@ mod instruction_tests {
         assert_eq!(test_cpu.cpu.a, 0x80); //test transfer
         assert_eq!(test_cpu.cpu.negative, true); //test negative flag
 
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
         test_cpu.cpu.pc = 0x8000;
         test_cpu.cpu.y = 0x00;
@@ -1592,7 +1592,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_adc() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         // signed:   5 + 5 = 10 | V -> 0
@@ -1816,7 +1816,7 @@ mod instruction_tests {
 
     #[test]
     fn test_sbc() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         // signed:   5 - 5 = 0  | V -> 0
@@ -2027,7 +2027,7 @@ mod instruction_tests {
 
     #[test]
     fn test_and() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         //   0b1111_0100
@@ -2179,7 +2179,7 @@ mod instruction_tests {
 
     #[test]
     fn test_eor() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         //   0b1111_0100
@@ -2323,7 +2323,7 @@ mod instruction_tests {
 
     #[test]
     fn test_ora() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         //   0b1111_0100
@@ -2467,7 +2467,7 @@ mod instruction_tests {
 
     #[test]
     fn test_asl() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         //  0b00111010
@@ -2566,7 +2566,7 @@ mod instruction_tests {
     }
     #[test]
     fn test_lsr() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         //    0b00111010
@@ -2666,7 +2666,7 @@ mod instruction_tests {
 
     #[test]
     fn test_ror() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         //   0b   0001_1101
@@ -2766,7 +2766,7 @@ mod instruction_tests {
 
     #[test]
     fn test_rol() {
-        let mut test_cpu = MyCpu::default();
+        let mut test_cpu = Bus::default();
         let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
 
         //  0b00111010
