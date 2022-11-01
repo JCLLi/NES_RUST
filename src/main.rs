@@ -38,8 +38,8 @@ impl Cpu for MyCpu {
             self.cycle -= 1;
             return Result::Ok(());
         }
-       return Ok(());
-   }
+        return Ok(());
+    }
 
     fn ppu_read_chr_rom(&self, offset: u16) -> u8 {
         self.cartridge.prg_rom_data[offset as usize]
