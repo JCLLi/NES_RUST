@@ -176,8 +176,9 @@ impl MapperType {
 
 #[cfg(test)]
 mod mapper_tests {
+    use crate::bus::Bus;
     use crate::MapperType::{Nrom, MMC1};
-    use crate::{Cartridge, Cpu6502, MapperType, MyCpu};
+    use crate::{Cartridge, Cpu6502, MapperType};
 
     #[test]
     fn test_nrom() {
@@ -276,7 +277,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -293,13 +294,11 @@ mod mapper_tests {
                 amount_shifted: 0,
             },
         };
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -319,16 +318,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xe000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xe000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -411,7 +407,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -428,13 +424,11 @@ mod mapper_tests {
                 amount_shifted: 0,
             },
         };
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
@@ -455,16 +449,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -546,7 +537,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -563,13 +554,11 @@ mod mapper_tests {
                 amount_shifted: 0,
             },
         };
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
@@ -590,16 +579,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0xa000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0xa000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring: _,
                 prg_rom_bank_mode: _,
@@ -681,7 +667,7 @@ mod mapper_tests {
             chr_rom_data: chr_data,
         };
 
-        let mut mycpu = MyCpu {
+        let mut bus = Bus {
             cpu: test_cpu,
             cartridge: cart,
             cycle: 0,
@@ -698,13 +684,11 @@ mod mapper_tests {
                 amount_shifted: 0,
             },
         };
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b1111, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b0111, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0x8000, 0b1111, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0x8000, 0b0111, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,
@@ -725,16 +709,13 @@ mod mapper_tests {
             }
             _ => panic!("This is a mmc1 test"),
         }
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b1, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        mycpu
-            .mapper
-            .write_mapper(0x8000, 0b0, &mut mycpu.cpu.mem, &mut mycpu.cartridge);
-        match mycpu.mapper {
+        bus.mapper
+            .write_mapper(0x8000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0x8000, 0b1, &mut bus.cpu.mem, &mut bus.cartridge);
+        bus.mapper
+            .write_mapper(0x8000, 0b0, &mut bus.cpu.mem, &mut bus.cartridge);
+        match bus.mapper {
             MapperType::MMC1 {
                 mirroring,
                 prg_rom_bank_mode,

@@ -1,4 +1,5 @@
 #[derive(PartialEq, Eq, Debug)]
+
 pub struct Cartridge {
     // HEADER
     pub prg_rom_size_in_16kb: u8,
