@@ -1,17 +1,33 @@
+//! This module provides the bus, which connects the CPU, the Cartridge and the mapper.
+
 use crate::{Cartridge, Cpu6502, Instruction, MapperType};
 use std::error::Error;
 use tudelft_nes_ppu::{Cpu, Mirroring, Ppu, PpuRegister};
 use tudelft_nes_test::TestableCpu;
 
-#[derive(Default)] // TODO delete this after files can be read (this is not useful for any implementation)
+#[derive(Default)]
+/// This struct triggers the CPU to execute the next instruction and it reads and writes data to the ROM by using the mapper struct.
 pub struct Bus {
+    /// CPU which is connected to the bus.
     pub cpu: Cpu6502,
+    /// Cartridge which is connected to the bus.
     pub cartridge: Cartridge,
+    /// The current number of remaining cycles for an instruction.
     pub cycle: u8, // Cycles of instruction
+    /// Mapper used for accessing memory.
     pub mapper: MapperType,
 }
 
 impl Bus {
+    /// Writes data to the dedicated memory. Depending on the address, either the CPU's memory or the PPU's memory is written.
+    ///
+    /// # Arguments
+    ///
+    /// * `ppu` - Borrowed instance of PPU.
+    /// * `addr` - The address to which the address shall be written.
+    /// * `data` - The data itself that shall be written.
+    ///
+    /// Nothing is returned.
     pub fn data_write(&mut self, ppu: &mut Ppu, addr: u16, data: u8) {
         if addr >= 0x8000 {
             self.mapper
@@ -61,6 +77,15 @@ impl Bus {
         }
     }
 
+    /// Reads data from the dedicated memory. Depending on the address, either the CPU's memory or the PPU's memory is read.
+    ///
+    /// # Arguments
+    ///
+    /// * `ppu` - Borrowed instance of PPU.
+    /// * `addr` - The address to which the address shall be written.
+    ///
+    /// # Return
+    /// * `u8` - read data byte of address.
     pub fn data_read(&self, ppu: &mut Ppu, addr: u16) -> u8 {
         if addr >= 0x8000 {
             self.cpu.mem[self.mapper.get_mapper_address(addr) as usize]

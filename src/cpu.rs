@@ -1,25 +1,49 @@
+//! This module provides the CPU, which stores the states of the registers, manages the stack memory, and holds the program memory.
+
+/// A struct representing the CPU, which stores the states of the registers, manages the stack memory, and holds the program memory.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Cpu6502 {
     // TODO make these not all public
+    /// Value in accumulator register
     pub a: u8,
+    /// Value in register for index X
     pub x: u8,
+    /// Value in register for index Y
     pub y: u8,
+    /// Value of program counter
     pub pc: u16,
+    /// Value of stack pointer
     pub sp: u16,
 
     // Program status register
+    /// Indicates if carry flag is set
     pub carry: bool,
+    /// Indicates if zero flag is set
     pub zero: bool,
+    /// Indicates if interrupts are disabled
     pub irq_dis: bool,
+    /// Indicates whether decimal mode is used
     pub dec: bool,
+    /// Indicates if break "flag" is set
     pub b: bool,
+    /// Indicates if overflow flag is set
     pub overflow: bool,
+    /// Indicates if negative flag is set
     pub negative: bool,
 
+    /// ROM currently held in the CPU
     pub mem: [u8; 0xffff + 1],
 }
 
 impl Cpu6502 {
+    /// Creates and returns a Cpu6502 instance from an NES file provided as a vector of bytes.
+    ///
+    /// # Arguments
+    ///
+    /// * `rom` - A byte slice that contains the input .nes file.
+    ///
+    /// # Return
+    /// * `Cpu6502` - a Cpu6502 instance containing the data of `rom`.
     pub fn generate_from_rom(rom: &[u8]) -> Cpu6502 {
         // TODO this only works for NROM! Make some mapper init function.
         let train_avail = (rom[6] & 0b100) == 0b100;
@@ -60,6 +84,14 @@ impl Cpu6502 {
         }
     }
 
+    /// Pushes given value onto the CPU's stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - CPU's own instance needed to access the stack pointer.
+    /// * `value` - The value that shall be pushed onto the stack.
+    ///
+    /// No return value.
     pub fn stack_push(&mut self, value: u8) {
         self.mem[self.sp as usize] = value;
         self.sp -= 1;
@@ -67,6 +99,14 @@ impl Cpu6502 {
         self.sp |= 0x100;
     }
 
+    /// Pops the top value from the CPU's stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - CPU's own instance needed to access the stack pointer.
+    ///
+    /// # Return
+    /// * `u8` - The value that has been popped from the stack.
     pub fn stack_pop(&mut self) -> u8 {
         self.sp += 1;
         self.sp &= 0xff;
@@ -76,6 +116,10 @@ impl Cpu6502 {
 }
 
 impl Default for Cpu6502 {
+    /// Implements the trait `Default` for Cpu6502 which returns a default instance of itself. All registers are set to false, except for pc and sp, which are also put their default state. The memory is filled with zeros.
+    ///
+    /// # Return
+    /// * `Cpu6502` - Instance of the struct in the default state.
     fn default() -> Cpu6502 {
         Cpu6502 {
             a: 0,

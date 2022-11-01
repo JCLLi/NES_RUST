@@ -1,25 +1,41 @@
+//! This module handles the mapping of logical addresses used by the CPU and the physical memory location in the cartridge
+
 use crate::Cartridge;
 
+/// A struct translating the memory address used by the CPU into the physical memory location depending on the mapper that is used
 #[derive(Debug, PartialEq, Eq)]
 pub enum MapperType {
-    Nrom {
-        prg_rom_size_in_16kb: u8,
-    },
+    /// Simple mapper which maps the logical address to the same physical address.
+    Nrom { prg_rom_size_in_16kb: u8 },
+    /// Nintendo MMC1 mapper.
     MMC1 {
         // Settings
+        /// Indicates whether mirroring is used by PPU.
         mirroring: u8,
+        /// Specifies the PRGM ROM bank mode.
         prg_rom_bank_mode: u8,
+        /// Specifies the CHR ROM bank mode.
         chr_rom_bank_mode: bool,
+        /// Specifies which CHR are used by the PPU.
         chr_bank0: u8,
+        /// Specifies which CHR are used by the PPU.
         chr_bank1: u8,
+        /// Location of the switchable bank.
         prg_bank: u8,
+        /// Indicates whether in MMC1B mode is used.
         mmc1b: bool,
 
+        /// Register used by load-register.
         shift_register: u8,
+        /// Data bits in the shift register.
         amount_shifted: u8,
     },
 }
 impl Default for MapperType {
+    /// Implements the trait `Default` for MapperType which returns a default instance which uses the NROM mapper with the ROM size of 16 kB.
+    ///
+    /// # Return
+    /// * `Self` - Instance of the struct in the default state.
     fn default() -> Self {
         MapperType::Nrom {
             prg_rom_size_in_16kb: 1,
@@ -27,6 +43,15 @@ impl Default for MapperType {
     }
 }
 impl MapperType {
+    /// Return a mapper instance based on the provided cartridge.
+    ///
+    /// # Arguments
+    ///
+    /// * `mapper_number` - ID of the mapper.
+    /// * `cartridge` - An instance of `Cartridge` used to determine the prg rom size.
+    ///
+    /// # Return
+    /// * `MapperType` - Enum of mapper. If mapper ID is not known, the function panics.
     pub fn get_mapper(mapper_number: u8, cartridge: Cartridge) -> MapperType {
         match mapper_number {
             0 => MapperType::Nrom {
@@ -47,6 +72,16 @@ impl MapperType {
             _ => panic!("Mapper not implemented/known"),
         }
     }
+
+    /// Return the mapped address.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - Instance of mapper itself.
+    /// * `addr` - Address that shall be translated to the mapped address.
+    ///
+    /// # Return
+    /// * `u16` - Mapped address.
     pub fn get_mapper_address(&self, addr: u16) -> u16 {
         match self {
             MapperType::Nrom {
@@ -70,6 +105,18 @@ impl MapperType {
             MapperType::MMC1 { .. } => addr,
         }
     }
+
+    /// Write to mapped address (Not possible for NROM mapper).
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - Borrowed instance of mapper itself.
+    /// * `addr` - Address to which the data byte shall be written.
+    /// * `data` - Data byte that shall be written.
+    /// * `mem`  - Whole memory of a i. e. CPU.
+    /// * `cart` - Borrowed instance of cartridge.
+    ///
+    /// Nothing is returned.
     pub fn write_mapper(
         &mut self,
         addr: u16,

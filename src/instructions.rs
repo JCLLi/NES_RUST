@@ -1,7 +1,10 @@
+//! This module contains the logic of the 6502 instructions. It is used by the Bus module.
+
 use crate::Bus;
 use tudelft_nes_ppu::Ppu;
 
 #[allow(clippy::upper_case_acronyms)] // 6502 uses upper case acronyms so we do too
+/// Enum of instruction names for all supported instructions
 pub enum InstructionName {
     ADC,
     AND,
@@ -61,6 +64,7 @@ pub enum InstructionName {
     TYA,
 }
 
+/// Enum of all possible addressing modes of the 6502 instruction set. (Note: Not every instruction makes used of all addressing modes.)
 pub enum AddressingMode {
     Implied,
     Accumulator,
@@ -77,12 +81,23 @@ pub enum AddressingMode {
     IndirectY,
 }
 
+/// A struct representing a single Instruction, which is identified by an instruction name, an addressing mode, and the needed CPU cycles to execute it.
 pub struct Instruction {
     instruction_name: InstructionName,
     addressing_mode: AddressingMode,
     cycle: u8,
 }
+
 impl Instruction {
+    /// Determines an `Instruction` including instruction_name and addressing_mode for the provided `opcode`.
+    ///
+    /// # Arguments
+    ///
+    /// * `opcode` - Opcode of the instruction
+    ///
+    /// # Return
+    ///
+    /// * `Instruction` - the instruction if the `opcode` is supported, otherwise it panics.
     pub fn get_instruction(opcode: u8) -> Instruction {
         match opcode {
             // ADC
@@ -901,9 +916,18 @@ impl Instruction {
             _ => panic!("Invalid Opcode: {:08x}", opcode),
         }
     }
+
+    /// Finds and executes the next `Instruction` of the CPU on the bus.
+    ///
+    /// # Arguments
+    ///
+    /// * `bus` - A borrowed instance of `Bus` on which holds the CPU on which the instruction shall be executed
+    /// * `ppu` - A borrowed instance of `Ppu` in case the instruction needs to access PPU memory
+    ///
+    /// # Return
+    /// Returns nothing. If the opcode for the next instruction is invalid, either the function `get_mapper_address()` or `get_instruction()` will panic.
     pub fn do_instruction(bus: &mut Bus, ppu: &mut Ppu) {
         let opcode: u8 = bus.data_read(ppu, bus.cpu.pc);
-
         let instr = Instruction::get_instruction(opcode);
         bus.cycle = instr.cycle;
 
@@ -1421,6 +1445,16 @@ impl Instruction {
     }
 }
 
+/// Gets the data address used by an `Instruction` depending on the addressing mode. The mapper module, managed by the bus, is used to translate the given address to the correct physical location.
+///
+/// # Arguments
+///
+/// * `bus` - borrowed instance of Bus, which holds the CPU.
+/// * `address_mode` - The addressing mode used to determine the address.
+/// * `ppu` - borrowed instance of PPU in case PPU memory needs to be accessed.
+///
+/// # Return
+/// * `u16` - address of the opcode. If the addressing modes is `AddressingMode::Accumulator`, the function panics because the accumulator must be addressed directly through the CPU struct.
 pub fn get_data_address(bus: &mut Bus, address_mode: AddressingMode, ppu: &mut Ppu) -> u16 {
     match address_mode {
         AddressingMode::Implied => bus.cpu.pc,
