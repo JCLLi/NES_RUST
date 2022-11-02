@@ -122,7 +122,7 @@ impl MapperType {
         addr: u16,
         data: u8,
         mem: &mut [u8; 0xffff + 1],
-        cart: &mut Cartridge,
+        cart: &Cartridge,
     ) {
         //You can't write to read-only memory
         match self {
@@ -140,7 +140,6 @@ impl MapperType {
                 ref mut amount_shifted,
             } => {
                 let mut prg_bank_changed = false;
-                let mut chr_bank_changed = false;
                 *shift_register >>= 1;
                 *shift_register |= (data & 0x1) << 4;
                 *amount_shifted += 1;
@@ -156,13 +155,10 @@ impl MapperType {
                         *prg_rom_bank_mode = (*shift_register & 0b1100) >> 2;
                         *chr_rom_bank_mode = (*shift_register & 0b1_0000) == 0b1_0000;
                         prg_bank_changed = true;
-                        chr_bank_changed = true;
                     } else if (0xa000..=0xbfff).contains(&addr) {
                         *chr_bank0 = *shift_register & 0b1_1111;
-                        chr_bank_changed = true;
                     } else if (0xc000..=0xdfff).contains(&addr) {
                         *chr_bank1 = *shift_register & 0b1_1111;
-                        chr_bank_changed = true;
                     } else if (0xe000..=0xffff).contains(&addr) {
                         *prg_bank = *shift_register & 0b1111;
                         *mmc1b = *shift_register & 0b1_0000 == 0b1_0000;
@@ -212,10 +208,50 @@ impl MapperType {
                             }
                         }
                     }
-                    if chr_bank_changed {
-                        // TODO this has to be implemented
+                }
+            }
+        }
+    }
+
+    pub fn get_chr_data(&self, cart: &Cartridge, offset: u16) -> u8 {
+        if cart.chr_rom_size_in_8kb == 0 {
+            return 0; // TODO implement prg RAM
+        }
+        let mut chr_bank: [u8; 8192] = [0; 8192];
+        match self {
+            MapperType::Nrom { .. } => cart.chr_rom_data[offset as usize],
+            MapperType::MMC1 {
+                mirroring: _,
+                prg_rom_bank_mode: _,
+                chr_rom_bank_mode,
+                chr_bank0,
+                chr_bank1,
+                prg_bank: _,
+                mmc1b: _,
+                // Stored values
+                shift_register: _,
+                amount_shifted: _,
+            } => {
+                if *chr_rom_bank_mode {
+                    for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
+                        if i < 0x0fff {
+                            *mem_ref = cart.chr_rom_data
+                                [(i + 4096 * (chr_bank0 & 0b1110) as usize) as usize];
+                        } else {
+                            *mem_ref = cart.chr_rom_data
+                                [(i + 4096 * (chr_bank0 & 0b1111) as usize) as usize];
+                        }
+                    }
+                } else {
+                    for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
+                        if i < 0x0fff {
+                            *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank0 as usize) as usize];
+                        } else {
+                            *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank1 as usize) as usize];
+                        }
                     }
                 }
+                chr_bank[offset as usize]
             }
         }
     }
@@ -224,6 +260,7 @@ impl MapperType {
 #[cfg(test)]
 mod mapper_tests {
     use crate::bus::Bus;
+    use crate::controller::Controller;
     use crate::MapperType::{Nrom, MMC1};
     use crate::{Cartridge, Cpu6502, MapperType};
 
@@ -339,6 +376,10 @@ mod mapper_tests {
                 // Stored values
                 shift_register: 0,
                 amount_shifted: 0,
+            },
+            controller: Controller {
+                shift_register_index: 0,
+                strobe: false,
             },
             jam: false,
         };
@@ -471,6 +512,10 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            controller: Controller {
+                shift_register_index: 0,
+                strobe: false,
+            },
             jam: false,
         };
         bus.mapper
@@ -602,6 +647,10 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            controller: Controller {
+                shift_register_index: 0,
+                strobe: false,
+            },
             jam: false,
         };
         bus.mapper
@@ -732,6 +781,10 @@ mod mapper_tests {
                 // Stored values
                 shift_register: 0,
                 amount_shifted: 0,
+            },
+            controller: Controller {
+                shift_register_index: 0,
+                strobe: false,
             },
             jam: false,
         };
