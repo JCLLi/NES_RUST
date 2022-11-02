@@ -108,7 +108,7 @@ pub enum AddressingMode {
 pub struct Instruction {
     instruction_name: InstructionName,
     addressing_mode: AddressingMode,
-    cycle: u8,
+    cycle: u16,
 }
 
 impl Instruction {

@@ -3,6 +3,7 @@
 
 /// A struct representing a physical NES cartridge which holds the contents contained in an NES file.
 pub struct Cartridge {
+    // TODO make these private
     // HEADER
     /// Size of program-ROM specified in multiples of 16 kB.
     pub prg_rom_size_in_16kb: u8,
@@ -32,7 +33,7 @@ pub struct Cartridge {
 
     // Flags 8
     /// Size of PGRM RAM specified in multiples of 8 kB.
-    pub prg_ram_size_in_8kb: u8, // TODO according to iNES format specs a RAM of 0 should still be 8 kB
+    pub prg_ram_size_in_8kb: u8,
 
     // Flags 9
     /// Specifies which TV system is used (0 -> NTSC, 1 -> PAL).
