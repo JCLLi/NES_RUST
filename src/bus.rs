@@ -1,27 +1,30 @@
 //! This module provides the bus, which connects the CPU, the Cartridge and the mapper.
 
+use crate::controller::Controller;
 use crate::{Cartridge, Cpu6502, Instruction, MapperType};
 use std::error::Error;
 use tudelft_nes_ppu::{Cpu, Mirroring, Ppu, PpuRegister};
 use tudelft_nes_test::TestableCpu;
 
 #[derive(Default)]
-/// This struct triggers the CPU to execute the next instruction and it reads and writes data to the ROM by using the mapper struct.
+/// This struct combines the different peripherals of the NES.
 pub struct Bus {
     /// CPU which is connected to the bus.
     pub cpu: Cpu6502,
     /// Cartridge which is connected to the bus.
     pub cartridge: Cartridge,
     /// The current number of remaining cycles for an instruction.
-    pub cycle: u8,
+    pub cycle: u16,
     /// Mapper used for accessing memory.
     pub mapper: MapperType,
+    /// Controller to handle user input.
+    pub controller: Controller,
     /// Flag to stop the program
     pub jam: bool,
 }
 
 impl Bus {
-    /// Writes data to the dedicated memory. Depending on the address, either the CPU's memory or the PPU's memory is written.
+    /// Writes data to the dedicated memory. Depending on the address, either the CPU's memory is written to or other peripherals are activated.
     ///
     /// # Arguments
     ///
@@ -31,10 +34,7 @@ impl Bus {
     ///
     /// Nothing is returned.
     pub fn data_write(&mut self, ppu: &mut Ppu, addr: u16, data: u8) {
-        if addr >= 0x8000 {
-            self.mapper
-                .write_mapper(addr, data, &mut self.cpu.mem, &mut self.cartridge);
-        } else if (0x2000..=0x3fff).contains(&addr) {
+        if (0x2000..=0x3fff).contains(&addr) {
             //ppu register mapping
             let remainder = (addr - 0x2000) % 8;
             match remainder {
@@ -49,7 +49,7 @@ impl Bus {
                 _ => panic!("Out of ppu map bound"),
             }
         } else if addr == 0x4014 {
-            let page_start: u16 = (data as u16) << 8;
+            let page_start: u16 = ((data as u16) << 8) % 0x800;
             if page_start >= 0x2000 {
                 panic!("Page address is out of CPU RAM bound");
             }
@@ -58,15 +58,16 @@ impl Bus {
                 oam_data[(i - page_start) as usize] = self.data_read(ppu, i);
             }
             ppu.write_oam_dma(oam_data);
-        } else if (0x0000..0x2000).contains(&addr) {
-            let remainder = addr % 0x0800; // Mirror RAM address
-            self.cpu.mem[remainder as usize] = data;
-        } else {
-            self.cpu.mem[addr as usize] = data; // NOTE this should not be called
+            self.cycle += 513; // TODO this can be 514 cycles too
+        } else if addr == 0x4016 {
+            self.controller.set_strobe(data);
+        } else if !(0x2000..0x4020).contains(&addr) {
+            self.cpu
+                .memory_write(&self.cartridge, &mut self.mapper, addr, data);
         }
     }
 
-    /// Reads data from the dedicated memory. Depending on the address, either the CPU's memory or the PPU's memory is read.
+    /// Reads data from the dedicated memory. Depending on the address, either the CPU's memory is read or other peripherals are activated.
     ///
     /// # Arguments
     ///
@@ -75,10 +76,8 @@ impl Bus {
     ///
     /// # Return
     /// * `u8` - read data byte of address.
-    pub fn data_read(&self, ppu: &mut Ppu, addr: u16) -> u8 {
-        if addr >= 0x8000 {
-            self.cpu.mem[self.mapper.get_mapper_address(addr) as usize]
-        } else if (0x2000..=0x3fff).contains(&addr) {
+    pub fn data_read(&mut self, ppu: &mut Ppu, addr: u16) -> u8 {
+        if (0x2000..=0x3fff).contains(&addr) {
             //ppu register mapping
             let remainder = (addr - 0x2000) % 8;
             match remainder {
@@ -92,11 +91,12 @@ impl Bus {
                 7 => ppu.read_ppu_register(PpuRegister::Data, self),
                 _ => panic!("Out of ppu map bound"),
             }
-        } else if (0x0000..0x2000).contains(&addr) {
-            let remainder = addr % 0x0800; // Mirror RAM address
-            self.cpu.mem[remainder as usize]
+        } else if addr == 0x4016 {
+            self.controller.get_controller_byte(ppu)
+        } else if !(0x2000..0x4020).contains(&addr) {
+            self.cpu.memory_read(&self.mapper, addr)
         } else {
-            self.cpu.mem[addr as usize] // NOTE this should not be called
+            0 // Default to 0
         }
     }
 }
@@ -152,6 +152,7 @@ impl TestableCpu for Bus {
             cartridge: Cartridge::generate_from_rom(rom),
             cycle: 0,
             mapper: MapperType::get_mapper(cartridge.mapper_number, cartridge),
+            controller: Controller::new(),
             jam: false,
         })
     }
@@ -161,8 +162,7 @@ impl TestableCpu for Bus {
     }
 
     fn memory_read(&self, address: u16) -> u8 {
-        let mut dummy_ppu = Ppu::new(Mirroring::Horizontal);
-        self.data_read(&mut dummy_ppu, address)
+        self.cpu.memory_read(&self.mapper, address)
     }
 }
 

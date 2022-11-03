@@ -1,4 +1,6 @@
 //! This module provides the CPU, which stores the states of the registers, manages the stack memory, and holds the program memory.
+use crate::Cartridge;
+use crate::MapperType;
 
 /// A struct representing the CPU, which stores the states of the registers, manages the stack memory, and holds the program memory.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
@@ -35,6 +37,48 @@ pub struct Cpu6502 {
 }
 
 impl Cpu6502 {
+    /// Write only on the CPU memory (without PPU or other peripherals).
+    ///
+    /// # Arguments
+    ///
+    /// * `cartridge` - Cartridge instance, needed for the mapper.
+    /// * `mapper` - Mapper instance to know the correct mapper to use
+    ///
+    /// Nothing is returned.
+    pub fn memory_write(
+        &mut self,
+        cartridge: &Cartridge,
+        mapper: &mut MapperType,
+        addr: u16,
+        data: u8,
+    ) {
+        if addr >= 0x8000 {
+            mapper.write_mapper(addr, data, &mut self.mem, cartridge);
+        } else if (0x0000..0x2000).contains(&addr) {
+            let remainder = addr % 0x0800; // Mirror RAM address
+            self.mem[remainder as usize] = data;
+        } else {
+            self.mem[addr as usize] = data; // NOTE this should not be called
+        }
+    }
+    /// Read registers only on the CPU memory (without PPU or other peripherals).
+    ///
+    /// # Arguments
+    ///
+    /// * `mapper` - Mapper instance to know the correct mapper to use
+    ///
+    /// # Return
+    /// * `u8` - read data byte of address.
+    pub fn memory_read(&self, mapper: &MapperType, addr: u16) -> u8 {
+        if addr >= 0x8000 {
+            self.mem[mapper.get_mapper_address(addr) as usize]
+        } else if (0x0000..0x2000).contains(&addr) {
+            let remainder = addr % 0x0800; // Mirror RAM address
+            self.mem[remainder as usize]
+        } else {
+            self.mem[addr as usize] // NOTE this should not be called
+        }
+    }
     /// Creates and returns a Cpu6502 instance from an NES file provided as a vector of bytes.
     ///
     /// # Arguments

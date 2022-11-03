@@ -122,7 +122,7 @@ impl MapperType {
         addr: u16,
         data: u8,
         mem: &mut [u8; 0xffff + 1],
-        cart: &mut Cartridge,
+        cart: &Cartridge,
     ) {
         //You can't write to read-only memory
         match self {
@@ -234,7 +234,7 @@ impl MapperType {
             } => {
                 if *chr_rom_bank_mode {
                     for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
-                        if i < 0x0fff {
+                        if i <= 0x0fff {
                             *mem_ref = cart.chr_rom_data
                                 [(i + 4096 * (chr_bank0 & 0b1110) as usize) as usize];
                         } else {
@@ -244,7 +244,7 @@ impl MapperType {
                     }
                 } else {
                     for (i, mem_ref) in chr_bank.iter_mut().enumerate().take(0x1fff) {
-                        if i < 0x0fff {
+                        if i <= 0x0fff {
                             *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank0 as usize) as usize];
                         } else {
                             *mem_ref = cart.chr_rom_data[(i + 4096 * *chr_bank1 as usize) as usize];
@@ -260,6 +260,7 @@ impl MapperType {
 #[cfg(test)]
 mod mapper_tests {
     use crate::bus::Bus;
+    use crate::controller::Controller;
     use crate::MapperType::{Nrom, MMC1};
     use crate::{Cartridge, Cpu6502, MapperType};
 
@@ -376,6 +377,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            controller: Controller::new(),
             jam: false,
         };
         bus.mapper
@@ -507,6 +509,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            controller: Controller::new(),
             jam: false,
         };
         bus.mapper
@@ -638,6 +641,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            controller: Controller::new(),
             jam: false,
         };
         bus.mapper
@@ -769,6 +773,7 @@ mod mapper_tests {
                 shift_register: 0,
                 amount_shifted: 0,
             },
+            controller: Controller::new(),
             jam: false,
         };
         bus.mapper

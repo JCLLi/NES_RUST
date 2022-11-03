@@ -1,5 +1,6 @@
 mod bus;
 mod cartridge;
+mod controller;
 mod cpu;
 mod instructions;
 mod instructions_test;
@@ -12,7 +13,7 @@ use mapper::MapperType;
 
 use crate::bus::Bus;
 use log::LevelFilter;
-use tudelft_nes_ppu::{run_cpu_headless_for, Mirroring};
+use tudelft_nes_ppu::{run_cpu, Mirroring};
 use tudelft_nes_test::TestableCpu;
 
 fn main() {
@@ -20,9 +21,9 @@ fn main() {
 
     pub const FILE: &[u8] = include_bytes!("../test_roms/nestest.nes");
 
-    let mut cpu = Bus::get_cpu(FILE).expect("In main error");
+    let cpu = Bus::get_cpu(FILE).expect("In main error");
 
-    run_cpu_headless_for(&mut cpu, Mirroring::Horizontal, 100000).expect("File reading failed");
+    run_cpu(cpu, Mirroring::Horizontal);
 }
 
 #[cfg(test)]
