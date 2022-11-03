@@ -2310,18 +2310,19 @@ impl Instruction {
             InstructionName::SHX => {
                 let addr = Self::get_data_address(bus, instr.addressing_mode, ppu);
                 let hh = (addr >> 8).wrapping_add(1);
+                let ll = addr & 0xff;
                 let res = (bus.cpu.x as u16 & hh) as u8;
-
-                bus.data_write(ppu, addr, res);
-
+                let addrs1 = ((bus.cpu.x as u16 & hh) << 8) | ll;
+                bus.data_write(ppu, addrs1, res);
                 bus.cpu.pc += 1; // Next instruction
             }
             InstructionName::SHY => {
                 let addr = Self::get_data_address(bus, instr.addressing_mode, ppu);
                 let hh = (addr >> 8).wrapping_add(1);
+                let ll = addr & 0xff;
                 let res = (bus.cpu.y as u16 & hh) as u8;
-
-                bus.data_write(ppu, addr, res);
+                let addrs1 = ((bus.cpu.y as u16 & hh) << 8) | ll;
+                bus.data_write(ppu, addrs1, res);
                 bus.cpu.pc += 1; // Next instruction
             }
             InstructionName::SLO => {

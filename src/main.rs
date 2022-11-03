@@ -35,7 +35,7 @@ mod tests {
     fn test_all() {
         env_logger::builder().filter_level(LevelFilter::Info).init();
 
-        if let Err(e) = run_tests::<Bus>(TestSelector::OFFICIAL_INSTRS) {
+        if let Err(e) = run_tests::<Bus>(TestSelector::ALL_INSTRS) {
             log::error!("TEST FAILED: {e}");
             assert!(false);
         }
