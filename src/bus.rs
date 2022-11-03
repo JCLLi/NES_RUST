@@ -137,7 +137,7 @@ impl Cpu for Bus {
         self.cpu.stack_push(p);
         self.cpu.irq_dis = true;
         self.cpu.pc = (self.data_read(&mut dummy_ppu, 0xFFFA) as u16)
-            & ((self.data_read(&mut dummy_ppu, 0xFFFB) as u16) << 8);
+            | ((self.data_read(&mut dummy_ppu, 0xFFFB) as u16) << 8);
     }
 }
 
