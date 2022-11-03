@@ -120,7 +120,7 @@ impl Instruction {
     ///
     /// # Return
     ///
-    /// * `Instruction` - the instruction if the `opcode` is supported, otherwise it panics.
+    /// * `Instruction` - the instructions associated opcode, addressing mode, and cycles.
     pub fn get_instruction(opcode: u8) -> Instruction {
         match opcode {
             // ADC

@@ -1169,7 +1169,6 @@ mod instruction_tests {
         test_cpu.cpu.mem[0x0002] = 0x03; //address hh;
         test_cpu.cpu.mem[0x0314] = 0x42;
         test_cpu.cpu.a = 0x42;
-        println!("number cpu.a {}", test_cpu.cpu.x);
         Instruction::do_instruction(&mut test_cpu, &mut dummy_ppu);
         assert_eq!(test_cpu.cpu.zero, true);
         assert_eq!(test_cpu.cpu.carry, true);

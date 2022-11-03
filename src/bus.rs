@@ -132,8 +132,8 @@ impl Cpu for Bus {
             (self.cpu.overflow as u8) << 6 |
             (self.cpu.negative as u8) << 7;
 
-        self.cpu.stack_push((self.cpu.pc & 0xff) as u8);
         self.cpu.stack_push(((self.cpu.pc >> 8) & 0xff) as u8);
+        self.cpu.stack_push((self.cpu.pc & 0xff) as u8);
         self.cpu.stack_push(p);
         self.cpu.irq_dis = true;
         self.cpu.pc = (self.data_read(&mut dummy_ppu, 0xFFFA) as u16)

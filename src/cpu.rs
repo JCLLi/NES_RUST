@@ -58,7 +58,7 @@ impl Cpu6502 {
             let remainder = addr % 0x0800; // Mirror RAM address
             self.mem[remainder as usize] = data;
         } else {
-            self.mem[addr as usize] = data; // NOTE this should not be called
+            self.mem[addr as usize] = data;
         }
     }
     /// Read registers only on the CPU memory (without PPU or other peripherals).
@@ -76,7 +76,7 @@ impl Cpu6502 {
             let remainder = addr % 0x0800; // Mirror RAM address
             self.mem[remainder as usize]
         } else {
-            self.mem[addr as usize] // NOTE this should not be called
+            self.mem[addr as usize]
         }
     }
     /// Creates and returns a Cpu6502 instance from an NES file provided as a vector of bytes.
@@ -105,11 +105,8 @@ impl Cpu6502 {
             }
         }
         let reset_offset = if rom[4] == 1 { 16384 } else { 0 };
-        let mut pc = ((rom_data[0xfffd - reset_offset] as u16) << 8)
+        let pc = ((rom_data[0xfffd - reset_offset] as u16) << 8)
             | rom_data[0xfffc - reset_offset] as u16; // Reset vector
-        if pc >= 0xc000 && rom[4] == 1 {
-            pc -= 16384;
-        }
         Cpu6502 {
             a: 0,
             x: 0,
